@@ -1,8 +1,14 @@
 import React from "react";
+import { Helmet } from "react-helmet";
 
 const Reports = () => {
   return (
     <div>
+      <Helmet>
+        <title>MTL SSE | Reports</title>
+        <meta name="description" content="Reports for MTL SSE progress" />
+        <meta property="og:title" content="MTL SSE | Reports" />
+      </Helmet>
       7.4.13. The Faculty of Humanities and Social Sciences has the following
       Departments: i. ii. iii. iv. v. vi. Communication Studies Information
       Sciences Theology and Religious Studies History and Heritage Studies

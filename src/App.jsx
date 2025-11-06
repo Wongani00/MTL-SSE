@@ -12,6 +12,7 @@ import Projects from "./pages/Projects.jsx";
 import Admin from "./pages/Admin.jsx";
 import Reports from "./pages/Reports.jsx";
 import NotFound from "./pages/errors/NotFound.jsx";
+import UserProfile from "./pages/UserProfile.jsx";
 
 const App = () => {
   const router = createBrowserRouter(
@@ -23,6 +24,7 @@ const App = () => {
           <Route path="projects" element={<Projects />} />
           <Route path="admin" element={<Admin />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="user-profile" element={<UserProfile />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </>
