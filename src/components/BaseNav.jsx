@@ -48,7 +48,7 @@ const BaseNav = () => {
     <div className="h-screen flex overflow-hidden bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 md:w-50 lg:w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } flex flex-col`}
       >
@@ -121,8 +121,8 @@ const BaseNav = () => {
             <div className="flex items-center gap-3">
               <h3 className="font-semibold text-[20px]">
                 Hello!{" "}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-blue-500">
-                  user
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-600 to-[midnightblue]">
+                  Bradley
                 </span>
               </h3>
               <div className="relative" ref={dropdownRef}>

@@ -1,6 +1,6 @@
-# React + Vite
+# MTL SSE
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the projet that helps MTL track the project from survey to installation.
 
 Currently, two official plugins are available:
 

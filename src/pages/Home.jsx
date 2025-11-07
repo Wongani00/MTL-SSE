@@ -17,14 +17,14 @@ const Home = () => {
 
       <div className="font-sans bg-gray-50">
         {/* Hero Section */}
-        <div className="relative bg-gradient-to-br from-gray-900 to-blue-900 overflow-hidden">
+        <div className="relative bg-gradient-to-br rounded-md from-gray-900 to-blue-900 overflow-hidden transition duration-200 hover:scale-102">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
             <div className="grid grid-cols-1 items-center">
               <div className="text-white">
                 <div className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 mb-6">
                   <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
                   <span className="text-yellow-500 text-lg font-medium">
-                    Welcome to SSE Portal
+                    Welcome to <span className="font-bold">MTL SSE</span> Portal
                     <span className="text-[26px] ml-[2px]">!</span>
                   </span>
                 </div>
