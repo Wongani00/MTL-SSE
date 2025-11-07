@@ -144,7 +144,10 @@ const BaseNav = () => {
                       Profile
                     </li>
                   </NavLink>
-                  <li className="px-3 py-2 hover:bg-gray-100 rounded-md cursor-pointer transition-colors text-red-600">
+                  <li
+                    onClick={toggleDropdown}
+                    className="px-3 py-2 hover:bg-gray-100 rounded-md cursor-pointer transition-colors text-red-600"
+                  >
                     Sign Out
                   </li>
                 </ul>
@@ -155,8 +158,6 @@ const BaseNav = () => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-3 lg:p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
-
           <Outlet />
         </main>
       </div>
