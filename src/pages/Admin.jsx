@@ -8,8 +8,6 @@ import {
   FaTools,
 } from "react-icons/fa";
 import CompanyLogo from "../assets/mtl-logo-75.png";
-import Login from "./Login";
-import SignUp from "./SignUp";
 
 const Admin = () => {
   return (
@@ -25,7 +23,7 @@ const Admin = () => {
       {/* admin main page content */}
       <div className="max-w-full overflow-hidden">
         {/* top section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-center justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-4 items-center justify-center">
           {/* Total users */}
           <div className="bg-white py-3 px-4 rounded-md cursor-pointer shadow-lg transition duration-300 hover:shadow-none hover:scale-102">
             <FaUser size={24} color="blue" />
@@ -70,7 +68,7 @@ const Admin = () => {
       </div>
 
       {/* table for user information */}
-      <div className="bg-white rounded-lg my-5 shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg my-3 shadow-sm border border-gray-200">
         <div className="px-6 py-2 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
             User Management
@@ -84,7 +82,7 @@ const Admin = () => {
               commandfor="add_user"
               className="bg-gradient-to-r from-yellow-500 to-[midnightblue] rounded-md font-sm px-4 py-2 text-white cursor-pointer transition duration-200 hover:font-semibold"
             >
-              Add User
+              Add
             </button>
           </div>
         </div>
@@ -349,7 +347,6 @@ const Admin = () => {
         </div>
       </div>
 
-      
       {/* =============================== MODALS =========================== */}
       {/* modal for deleting users */}
       <el-dialog>
@@ -442,11 +439,11 @@ const Admin = () => {
                     <div class="w-full">
                       <div class="flex flex-col items-center justify-center">
                         <img src={CompanyLogo} alt="MTL Logo" />
-                        <h1 class="text-2xl font-md mt-2 text-gray-900">
+                        <h1 class="text-2xl font-md mt-3 text-gray-900">
                           Add User
                         </h1>
                       </div>
-                      <div class="mt-8">
+                      <div class="mt-5">
                         <form action="">
                           <div class="relative mt-6">
                             <input
