@@ -5,11 +5,13 @@ import UserPic from "../assets/user.png";
 const UserProfile = () => {
   return (
     <div>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-4">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">User Profile</h1>
-            <p className="text-gray-600 mt-2">
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-full mx-auto">
+          <div className="mb-8 text-center">
+            {/* <h1 className="text-3xl font-md text-gray-900">
+              User Profile
+            </h1> */}
+            <p className="text-xl text-gray-600 mt-2">
               Manage your account settings and preferences
             </p>
           </div>
@@ -156,7 +158,7 @@ const UserProfile = () => {
                     </button>
                   </div>
 
-                  <div className="flex justify-between items-center py-3">
+                  {/* <div className="flex justify-between items-center py-3">
                     <div>
                       <h4 className="font-medium text-gray-900">
                         Login Sessions
@@ -168,7 +170,7 @@ const UserProfile = () => {
                     <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                       View All
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
