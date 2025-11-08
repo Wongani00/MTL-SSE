@@ -10,7 +10,7 @@ import {
 import { CiHome as HomeIcon } from "react-icons/ci";
 import { FaUserCircle } from "react-icons/fa";
 import ImgLog from "../assets/mtl-logo-75.png";
-import Profile from "../assets/user.png";
+import Profile from "../assets/user.webp";
 import { NavLink, Outlet } from "react-router-dom";
 
 const BaseNav = () => {
@@ -33,11 +33,11 @@ const BaseNav = () => {
 
   const navItems = [
     { name: "Home", icon: HomeIcon, to: "/" },
-    { name: "Dashboard", icon: DashboardIcon, to: "/dashboard" },
-    { name: "Projects", icon: ProjectsIcon, to: "/projects" },
-    { name: "Admin", icon: AdminIcon, to: "/admin" },
-    { name: "Reports", icon: ReportsIcon, to: "/reports" },
-    { name: "Profile", icon: FaUserCircle, to: "/user-profile" },
+    { name: "Dashboard", icon: DashboardIcon, to: "/home/dashboard" },
+    { name: "Projects", icon: ProjectsIcon, to: "/home/projects" },
+    { name: "Admin", icon: AdminIcon, to: "/home/admin" },
+    { name: "Reports", icon: ReportsIcon, to: "/home/reports" },
+    { name: "Profile", icon: FaUserCircle, to: "/home/profile" },
   ];
 
   const toggleDropdown = () => {
@@ -139,7 +139,7 @@ const BaseNav = () => {
                     profileSignoutPopper ? "block" : "hidden"
                   }`}
                 >
-                  <NavLink to="/user-profile" onClick={toggleDropdown}>
+                  <NavLink to="/home/profile" onClick={toggleDropdown}>
                     <li className="px-3 py-2 hover:bg-gray-100 rounded-md cursor-pointer transition-colors">
                       Profile
                     </li>

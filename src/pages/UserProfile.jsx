@@ -1,6 +1,6 @@
 import React from "react";
 import { FaUserCircle } from "react-icons/fa";
-import UserPic from "../assets/user.png";
+import UserPic from "../assets/user.webp";
 
 const UserProfile = () => {
   return (

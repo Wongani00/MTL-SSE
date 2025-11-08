@@ -20,11 +20,11 @@ const App = () => {
       <>
         <Route path="/" element={<UniversalLayout />}>
           <Route index element={<Home />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="admin" element={<Admin />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="user-profile" element={<UserProfile />} />
+          <Route path="home/dashboard" element={<Dashboard />} />
+          <Route path="home/projects" element={<Projects />} />
+          <Route path="home/admin" element={<Admin />} />
+          <Route path="home/reports" element={<Reports />} />
+          <Route path="home/profile" element={<UserProfile />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </>
