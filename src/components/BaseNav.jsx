@@ -11,12 +11,15 @@ import { CiHome as HomeIcon } from "react-icons/ci";
 import { FaUserCircle } from "react-icons/fa";
 import ImgLog from "../assets/mtl-logo-75.png";
 import Profile from "../assets/user.webp";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/UseAuth";
 
 const BaseNav = () => {
   const [profileSignoutPopper, setProfileSignoutPopper] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const { user, logout, hasAnyRole } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -31,17 +34,39 @@ const BaseNav = () => {
     };
   }, []);
 
+  // Navigation items with role-based visibility
   const navItems = [
     { name: "Home", icon: HomeIcon, to: "/" },
     { name: "Dashboard", icon: DashboardIcon, to: "/home/dashboard" },
     { name: "Projects", icon: ProjectsIcon, to: "/home/projects" },
-    { name: "Admin", icon: AdminIcon, to: "/home/admin" },
+    {
+      name: "Admin",
+      icon: AdminIcon,
+      to: "/home/admin",
+      roles: ["Admin", "SuperAdmin"],
+    },
     { name: "Reports", icon: ReportsIcon, to: "/home/reports" },
     { name: "Profile", icon: FaUserCircle, to: "/home/profile" },
   ];
 
+  // Filter nav items based on user role
+  const filteredNavItems = navItems.filter((item) => {
+    if (!item.roles) return true;
+    return hasAnyRole(item.roles);
+  });
+
   const toggleDropdown = () => {
     setProfileSignoutPopper(!profileSignoutPopper);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      setProfileSignoutPopper(false);
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
@@ -53,7 +78,7 @@ const BaseNav = () => {
         } flex flex-col`}
       >
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Company Log */}
+          {/* Company Logo */}
           <div className="flex items-center gap-3 mb-4">
             <div className="rounded-full flex items-center justify-center">
               <NavLink to="/">
@@ -78,23 +103,29 @@ const BaseNav = () => {
 
           {/* Navigation */}
           <nav className="space-y-2">
-            {navItems.map((item, index) => {
+            {filteredNavItems.map((item, index) => {
               const Icon = item.icon;
               return (
                 <NavLink
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  onClick={() => setSidebarOpen(false)}
                   key={index}
                   to={item.to}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
                       isActive
-                        ? "bg-blue-50 text-blue-600 font-semibold"
+                        ? "bg-blue-50 text-blue-600 font-semibold border-l-4 border-blue-600"
                         : "text-gray-700 hover:bg-gray-100"
                     }`
                   }
                 >
                   <Icon size={20} className="flex-shrink-0" />
-                  <span>{item.name}</span>
+                  <span className="flex-1">{item.name}</span>
+                  {item.name === "Admin" &&
+                    hasAnyRole(["Admin", "SuperAdmin"]) && (
+                      <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                        {user?.role === "SuperAdmin" ? "Super" : "Admin"}
+                      </span>
+                    )}
                 </NavLink>
               );
             })}
@@ -112,52 +143,106 @@ const BaseNav = () => {
           >
             {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
+
           <input
             type="text"
             placeholder="Search..."
             className="hidden md:flex flex-1 max-w-2xl bg-gray-100 rounded-lg px-4 py-2 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+
           <div>
-            <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-[20px]">
-                Hello!{" "}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-600 to-[midnightblue]">
-                  Bradley
-                </span>
-              </h3>
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden sm:block">
+                <h3 className="font-semibold text-[18px] text-gray-900">
+                  Hello, {user?.username}!
+                </h3>
+                <p className="text-sm text-gray-500 capitalize">
+                  {user?.role} Role
+                </p>
+              </div>
+
               <div className="relative" ref={dropdownRef}>
-                <img
-                  src={Profile}
-                  alt="profile"
-                  className="w-12 h-12 rounded-full cursor-pointer hover:cursor-pointer object-cover border-2 border-gray-300 hover:border-blue-500 transition-colors"
-                  onClick={toggleDropdown}
-                />
+                <div className="flex items-center gap-2">
+                  {/* Role badges in header */}
+                  {hasAnyRole(["Admin", "SuperAdmin"]) && (
+                    <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium hidden md:inline-block">
+                      {user?.role === "SuperAdmin" ? "SUPER ADMIN" : "ADMIN"}
+                    </span>
+                  )}
+
+                  <img
+                    src={Profile}
+                    alt="profile"
+                    className="w-12 h-12 rounded-full cursor-pointer hover:cursor-pointer object-cover border-2 border-gray-300 hover:border-blue-500 transition-colors"
+                    onClick={toggleDropdown}
+                  />
+                </div>
 
                 {/* Dropdown Menu */}
-                <ul
-                  className={`flex flex-col bg-white border border-gray-200 rounded-lg shadow-lg p-2 absolute top-14 right-0 w-48 space-y-1 z-50 transition-all duration-200 ${
+                <div
+                  className={`flex flex-col bg-white border border-gray-200 rounded-lg shadow-xl p-2 absolute top-16 right-0 w-48 space-y-1 z-50 transition-all duration-200 ${
                     profileSignoutPopper ? "block" : "hidden"
                   }`}
                 >
-                  <NavLink to="/home/profile" onClick={toggleDropdown}>
-                    <li className="px-3 py-2 hover:bg-gray-100 rounded-md cursor-pointer transition-colors">
-                      Profile
-                    </li>
-                  </NavLink>
-                  <li
-                    onClick={toggleDropdown}
-                    className="px-3 py-2 hover:bg-gray-100 rounded-md cursor-pointer transition-colors text-red-600"
+                  <div className="px-3 py-2 border-b border-gray-100">
+                    <p className="font-medium text-gray-900">
+                      {user?.username}
+                    </p>
+                    <p className="text-sm text-gray-500 capitalize">
+                      {user?.role}
+                    </p>
+                  </div>
+
+                  <NavLink
+                    to="/home/profile"
+                    onClick={() => {
+                      setProfileSignoutPopper(false);
+                      setSidebarOpen(false);
+                    }}
+                    className={({ isActive }) =>
+                      `px-3 py-2 hover:bg-gray-100 rounded-md cursor-pointer transition-colors ${
+                        isActive ? "bg-blue-50 text-blue-600" : "text-gray-700"
+                      }`
+                    }
                   >
-                    Sign Out
-                  </li>
-                </ul>
+                    <li className="list-none">Profile</li>
+                  </NavLink>
+
+                  {hasAnyRole(["Admin", "SuperAdmin"]) && (
+                    <NavLink
+                      to="/home/admin"
+                      onClick={() => {
+                        setProfileSignoutPopper(false);
+                        setSidebarOpen(false);
+                      }}
+                      className={({ isActive }) =>
+                        `px-3 py-2 hover:bg-gray-100 rounded-md cursor-pointer transition-colors ${
+                          isActive
+                            ? "bg-blue-50 text-blue-600"
+                            : "text-gray-700"
+                        }`
+                      }
+                    >
+                      <li className="list-none">Admin Panel</li>
+                    </NavLink>
+                  )}
+
+                  <div className="border-t border-gray-100 pt-1">
+                    <li
+                      onClick={handleSignOut}
+                      className="px-3 py-2 hover:bg-gray-100 rounded-md cursor-pointer transition-colors text-red-600 list-none flex items-center gap-2"
+                    >
+                      <span>Sign Out</span>
+                    </li>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50">
           <Outlet />
         </main>
       </div>

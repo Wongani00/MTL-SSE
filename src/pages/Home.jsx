@@ -15,7 +15,7 @@ const Home = () => {
         <meta property="og:title" content="Home Page" />
       </Helmet>
 
-      <div className="font-sans bg-gray-50">
+      <div className="p-2 font-sans bg-gray-50">
         {/* Hero Section */}
         <div className="relative bg-gradient-to-br rounded-md from-gray-900 to-blue-900 overflow-hidden transition duration-200 hover:scale-102">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
@@ -120,12 +120,12 @@ const Home = () => {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                  <NavLink to="/projects">
+                  <NavLink to="/home/projects">
                     <button className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold py-3 px-8 rounded-lg cursor-pointer transition duration-200 transform hover:scale-105 shadow-lg">
                       Go to projects
                     </button>
                   </NavLink>
-                  <NavLink to="/dashboard">
+                  <NavLink to="/home/dashboard">
                     <button className="border border-gray-600 hover:border-gray-400 text-white font-medium py-3 px-8 rounded-lg cursor-pointer transition duration-200 hover:bg-white/5">
                       Dashboard
                     </button>

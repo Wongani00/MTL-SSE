@@ -1,16 +1,41 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import UserPic from "../assets/user.webp";
+import { useAuth } from "../hooks/UseAuth";
 
 const UserProfile = () => {
+  const { user } = useAuth();
+  const [userDetails, setUserDetails] = useState(null);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const response = await fetch("/api/auth/user-details", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserDetails(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user details:", error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
+  const displayUser = userDetails || user;
+
   return (
     <div>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-full mx-auto">
           <div className="mb-8 text-center">
-            {/* <h1 className="text-3xl font-md text-gray-900">
-              User Profile
-            </h1> */}
             <p className="text-xl text-gray-600 mt-2">
               Manage your account settings and preferences
             </p>
@@ -21,13 +46,18 @@ const UserProfile = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex flex-col items-center">
                   <div className="h-32 w-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-4">
-                    <img src={UserPic} alt="user profile" />
+                    <img
+                      src={UserPic}
+                      alt="user profile"
+                      className="h-32 w-32 rounded-full object-cover"
+                    />
                   </div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Wongani Nyirenda
+                    {displayUser.username ||
+                      `${displayUser.f_name} ${displayUser.l_name}`}
                   </h2>
-                  <p className="text-blue-600 font-medium mt-1">
-                    Commercial Team
+                  <p className="text-blue-600 font-medium mt-1 capitalize">
+                    {displayUser.department}
                   </p>
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 mt-3">
                     <svg
@@ -43,13 +73,15 @@ const UserProfile = () => {
 
                 <div className="mt-8 space-y-4">
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Projects Created</span>
-                    <span className="font-semibold text-gray-900">24</span>
+                    <span className="text-gray-600">Role</span>
+                    <span className="font-semibold text-gray-900 capitalize">
+                      {displayUser.role}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-gray-600">Member Since</span>
                     <span className="font-semibold text-gray-900">
-                      Jan 2024
+                      {new Date().getFullYear()}
                     </span>
                   </div>
                 </div>
@@ -62,15 +94,15 @@ const UserProfile = () => {
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm text-gray-600">Department</span>
-                    <p className="font-medium text-gray-900">Commercial</p>
+                    <p className="font-medium text-gray-900 capitalize">
+                      {displayUser.department}
+                    </p>
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">Role</span>
-                    <p className="font-medium text-gray-900">Sales Executive</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">CCO</span>
-                    <p className="font-medium text-gray-900">Nyasha Chidoola</p>
+                    <p className="font-medium text-gray-900 capitalize">
+                      {displayUser.role}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -82,18 +114,24 @@ const UserProfile = () => {
                   <h3 className="text-lg font-semibold text-gray-900">
                     Personal Information
                   </h3>
-                  <button className="hidden text-blue-600 hover:text-blue-700 text-sm font-medium">
-                    Edit
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name
+                      First Name
                     </label>
                     <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900">
-                      Wongani Nyirenda
+                      {displayUser.f_name}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Last Name
+                    </label>
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900">
+                      {displayUser.l_name}
                     </div>
                   </div>
 
@@ -102,25 +140,17 @@ const UserProfile = () => {
                       Email Address
                     </label>
                     <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900">
-                      wonganikaunga726@gmail.com
+                      {displayUser.email}
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
+                      Username
                     </label>
                     <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900">
-                      +265 886-873-712
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Employee ID
-                    </label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900">
-                      EMP-2024-001
+                      {displayUser.username ||
+                        `${displayUser.f_name} ${displayUser.l_name}`}
                     </div>
                   </div>
                 </div>
@@ -136,41 +166,13 @@ const UserProfile = () => {
                     <div>
                       <h4 className="font-medium text-gray-900">Password</h4>
                       <p className="text-sm text-gray-600">
-                        Last changed 2 weeks ago
+                        Last changed recently
                       </p>
                     </div>
                     <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                       Change Password
                     </button>
                   </div>
-
-                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Two-Factor Authentication
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        Add an extra layer of security
-                      </p>
-                    </div>
-                    <button className="text-gray-600 hover:text-gray-700 text-sm font-medium">
-                      Enable
-                    </button>
-                  </div>
-
-                  {/* <div className="flex justify-between items-center py-3">
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Login Sessions
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        Manage your active sessions
-                      </p>
-                    </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                      View All
-                    </button>
-                  </div> */}
                 </div>
               </div>
             </div>

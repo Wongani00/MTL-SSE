@@ -13,16 +13,35 @@ import Admin from "./pages/Admin.jsx";
 import Reports from "./pages/Reports.jsx";
 import NotFound from "./pages/errors/NotFound.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
-
+import Login from "./pages/Login.jsx";
+import { AuthProvider } from "./hooks/UseAuth.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import SignUp from "./pages/SignUp.jsx";
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <>
-        <Route path="/" element={<UniversalLayout />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<SignUp />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <UniversalLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Home />} />
           <Route path="home/dashboard" element={<Dashboard />} />
           <Route path="home/projects" element={<Projects />} />
-          <Route path="home/admin" element={<Admin />} />
+          <Route
+            path="home/admin"
+            element={
+              <ProtectedRoute requiredRole={["Admin", "SuperAdmin"]}>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
           <Route path="home/reports" element={<Reports />} />
           <Route path="home/profile" element={<UserProfile />} />
         </Route>
@@ -30,10 +49,13 @@ const App = () => {
       </>
     )
   );
+
   return (
-    <div>
-      <RouterProvider router={router} />
-    </div>
+    <AuthProvider>
+      <div>
+        <RouterProvider router={router} />
+      </div>
+    </AuthProvider>
   );
 };
 
