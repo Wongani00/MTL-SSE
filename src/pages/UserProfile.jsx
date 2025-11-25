@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/UseAuth";
 const UserProfile = () => {
   const { user } = useAuth();
   const [userDetails, setUserDetails] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -19,6 +20,8 @@ const UserProfile = () => {
         }
       } catch (error) {
         console.error("Failed to fetch user details:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -26,7 +29,26 @@ const UserProfile = () => {
   }, []);
 
   if (!user) {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading project details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading user profile...</p>
+        </div>
+      </div>
+    );
   }
 
   const displayUser = userDetails || user;
@@ -81,7 +103,7 @@ const UserProfile = () => {
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-gray-600">Member Since</span>
                     <span className="font-semibold text-gray-900">
-                      {new Date().getFullYear()}
+                      {displayUser.date_joined}
                     </span>
                   </div>
                 </div>

@@ -5,7 +5,7 @@ const Reports = () => {
   return (
     <div>
       <Helmet>
-        <title>MTL SSE | Reports</title>
+        <title>MTL SSE</title>
         <meta name="description" content="Reports for MTL SSE progress" />
         <meta property="og:title" content="MTL SSE | Reports" />
       </Helmet>

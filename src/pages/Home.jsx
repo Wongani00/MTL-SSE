@@ -7,7 +7,7 @@ const Home = () => {
   return (
     <div>
       <Helmet>
-        <title>MTL SSE | Home</title>
+        <title>MTL SSE</title>
         <meta
           name="description"
           content="Welcome to the Home Page of our application."

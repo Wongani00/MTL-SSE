@@ -21,7 +21,7 @@ const SignUp = () => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
+    }));
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -93,12 +93,11 @@ const SignUp = () => {
 
       if (response.ok && result.success) {
         setSuccess(true);
-        // Redirect to login after 2 seconds
+
         setTimeout(() => {
           navigate("/login");
         }, 2000);
       } else {
-        // Handle server-side validation errors
         if (result.data && typeof result.data === "object") {
           setErrors(result.data);
         } else {
@@ -302,6 +301,7 @@ const SignUp = () => {
                   </option>
                   <option value="Sales Executive">Sales Executive</option>
                   <option value="Accountant">Accountant</option>
+                  <option value="Solutions">SSE</option>
                 </select>
                 <label
                   htmlFor="role"

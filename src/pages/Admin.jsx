@@ -7,13 +7,28 @@ import {
   FaCog,
   FaTools,
 } from "react-icons/fa";
+import { NavLink } from "react-router-dom";
 import CompanyLogo from "../assets/mtl-logo-75.png";
 import { useAuth } from "../hooks/UseAuth";
 
 const Admin = () => {
   const { user } = useAuth();
   const [userDetails, setUserDetails] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    f_name: "",
+    l_name: "",
+    email: "",
+    department: "",
+    role: "",
+  });
+  const [errors, setErrors] = useState({});
 
+  // Fetch users
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
@@ -44,20 +59,177 @@ const Admin = () => {
     if (user) {
       fetchUserDetails();
     }
-  }, [user]);
+  }, [user, success]);
 
-  console.log("User details state:", userDetails);
+  // Add User Functionality
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrors({});
+
+    // Validation
+    const newErrors = {};
+    if (!formData.f_name.trim()) newErrors.f_name = "First name is required";
+    if (!formData.l_name.trim()) newErrors.l_name = "Last name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.department) newErrors.department = "Department is required";
+    if (!formData.role) newErrors.role = "Role is required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/user-management", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setSuccess(true);
+        setShowAddModal(false);
+        setFormData({
+          f_name: "",
+          l_name: "",
+          email: "",
+          department: "",
+          role: "",
+        });
+
+        // Hide success after 3 seconds
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        if (result.data && typeof result.data === "object") {
+          setErrors(result.data);
+        } else {
+          setErrors({ general: result.message || "Failed to add user" });
+        }
+      }
+    } catch (error) {
+      setErrors({ general: "Network error. Please try again." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete User Functionality
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const response = await fetch(
+        `/api/admin/user-management/${userToDelete.id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setSuccess(true);
+        setShowDeleteModal(false);
+        setUserToDelete(null);
+
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        alert(result.message || "Failed to delete user");
+      }
+    } catch (error) {
+      alert("Network error. Please try again.");
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const openDeleteModal = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
+
+  const closeModals = () => {
+    setShowAddModal(false);
+    setShowDeleteModal(false);
+    setUserToDelete(null);
+    setFormData({
+      f_name: "",
+      l_name: "",
+      email: "",
+      department: "",
+      role: "",
+    });
+    setErrors({});
+  };
+
+  const totalUsers = userDetails.length;
+  const salesExecutives = userDetails.filter(
+    (user) => user.role === "Sales Executive"
+  ).length;
+  const technicalStaff = userDetails.filter(
+    (user) =>
+      user.role === "Wireless Engineer" ||
+      user.role === "IP Broadband Engineer" ||
+      user.role === "Solutions"
+  ).length;
+  const financeTeam = userDetails.filter(
+    (user) => user.role === "Accountant"
+  ).length;
+  const admins = userDetails.filter(
+    (user) => user.role === "Admin" || user.role === "SuperAdmin"
+  ).length;
 
   return (
     <div>
       <Helmet>
-        <title>MTL SSE | Admin Panel</title>
+        <title>MTL SSE</title>
         <meta
           name="description"
           content="Admin Panel - Management of application settings and users."
         />
         <meta property="og:title" content="Admin Panel" />
       </Helmet>
+
+      {/* Success Message */}
+      {success && (
+        <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-green-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-green-800">
+                Operation completed successfully!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* admin main page content */}
       <div className="max-w-full overflow-hidden">
         {/* top section */}
@@ -67,7 +239,7 @@ const Admin = () => {
             <FaUser size={24} color="blue" />
             <div className="flex mt-2">
               <h1 className="mr-4 text-sm">Total Users</h1>
-              <span className="text-sm">12</span>
+              <span className="text-sm">{totalUsers}</span>
             </div>
           </div>
           {/* Total commercial members */}
@@ -75,23 +247,23 @@ const Admin = () => {
             <FaMoneyBillWave size={24} color="green" />
             <div className="flex mt-2">
               <h1 className="mr-4 text-sm">Sales Executives</h1>
-              <span className="text-sm">5</span>
+              <span className="text-sm">{salesExecutives}</span>
             </div>
           </div>
           {/* Total SSE members */}
           <div className="bg-white py-3 px-4 rounded-md cursor-pointer shadow-lg transition duration-300 hover:shadow-none hover:scale-102">
             <FaCog size={24} color="purple" />
             <div className="flex mt-2">
-              <h1 className="mr-4 text-sm">SSE members</h1>
-              <span className="text-sm">1</span>
+              <h1 className="mr-4 text-sm">Technical Staff</h1>
+              <span className="text-sm">{technicalStaff}</span>
             </div>
           </div>
           {/* Total technicians (specifically those from NOC) */}
           <div className="bg-white py-3 px-4 rounded-md cursor-pointer shadow-lg transition duration-300 hover:shadow-none hover:scale-102">
             <FaTools size={24} color="blue" />
             <div className="flex mt-2">
-              <h1 className="mr-4 text-sm">Total Techicians</h1>
-              <span className="text-sm">4</span>
+              <h1 className="mr-4 text-sm">Finance Team</h1>
+              <span className="text-sm">{financeTeam}</span>
             </div>
           </div>
           {/* Total admins */}
@@ -99,7 +271,7 @@ const Admin = () => {
             <FaUserShield size={24} color="red" />
             <div className="flex mt-2">
               <h1 className="mr-4 text-sm">Admin(s)</h1>
-              <span className="text-sm">2</span>
+              <span className="text-sm">{admins}</span>
             </div>
           </div>
         </div>
@@ -116,8 +288,7 @@ const Admin = () => {
               Manage system users and their permissions
             </p>
             <button
-              command="show-modal"
-              commandfor="add_user"
+              onClick={() => setShowAddModal(true)}
               className="bg-gradient-to-r from-yellow-500 to-[midnightblue] rounded-md font-sm px-4 py-2 text-white cursor-pointer transition duration-200 hover:font-semibold"
             >
               Add
@@ -200,7 +371,7 @@ const Admin = () => {
                   </td>
 
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                    Jan 15, 2024
+                    {user.date_created}
                   </td>
 
                   <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
@@ -209,8 +380,7 @@ const Admin = () => {
                         Edit
                       </button>
                       <button
-                        command="show-modal"
-                        commandfor="dialog"
+                        onClick={() => openDeleteModal(user)}
                         className="text-red-600 cursor-pointer hover:text-red-900 transition-colors"
                       >
                         Delete
@@ -219,206 +389,6 @@ const Admin = () => {
                   </td>
                 </tr>
               ))}
-
-              {/* <tr className="hover:bg-gray-50 transition-colors duration-150">
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">JD</span>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        John Doe
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        john.doe@company.com
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Commercial</div>
-                  <div className="text-sm text-gray-500">
-                    Commercial Department
-                  </div>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Active
-                  </span>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                  Jan 15, 2024
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <button className="text-blue-600 cursor-pointer hover:text-blue-900 transition-colors">
-                      Edit
-                    </button>
-                    <button
-                      command="show-modal"
-                      commandfor="dialog"
-                      className="text-red-600 cursor-pointer hover:text-red-900 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              <tr className="hover:bg-gray-50 transition-colors duration-150">
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-green-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">SJ</span>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        Sarah Johnson
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        sarah.j@company.com
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Technical</div>
-                  <div className="text-sm text-gray-500">
-                    Technical Department
-                  </div>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Active
-                  </span>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                  Feb 3, 2024
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <button className="text-blue-600 cursor-pointer hover:text-blue-900 transition-colors">
-                      Edit
-                    </button>
-                    <button
-                      command="show-modal"
-                      commandfor="dialog"
-                      className="text-red-600 cursor-pointer hover:text-red-900 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              <tr className="hover:bg-gray-50 transition-colors duration-150">
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-gray-400 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">MB</span>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        Mike Brown
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        mike.b@company.com
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Solutions</div>
-                  <div className="text-sm text-gray-500">
-                    Enterprise Solutions
-                  </div>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    Inactive
-                  </span>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                  Dec 20, 2023
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <button className="text-blue-600 cursor-pointer hover:text-blue-900 transition-colors">
-                      Edit
-                    </button>
-                    <button
-                      command="show-modal"
-                      commandfor="dialog"
-                      className="text-red-600 cursor-pointer hover:text-red-900 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              <tr className="hover:bg-gray-50 transition-colors duration-150">
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">EW</span>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        Emma Wilson
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        emma.w@company.com
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Finance</div>
-                  <div className="text-sm text-gray-500">
-                    Finance Department
-                  </div>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Active
-                  </span>
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                  Mar 10, 2024
-                </td>
-
-                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <button className="text-blue-600 cursor-pointer hover:text-blue-900 transition-colors">
-                      Edit
-                    </button>
-                    <button
-                      command="show-modal"
-                      commandfor="dialog"
-                      className="text-red-600 cursor-pointer hover:text-red-900 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr> */}
             </tbody>
           </table>
         </div>
@@ -427,8 +397,8 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700">
               Showing <span className="font-medium">1</span> to{" "}
-              <span className="font-medium">4</span> of{" "}
-              <span className="font-medium">24</span> users
+              <span className="font-medium">{userDetails.length}</span> of{" "}
+              <span className="font-medium">{userDetails.length}</span> users
             </div>
             <div className="flex space-x-2">
               <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
@@ -443,182 +413,250 @@ const Admin = () => {
       </div>
 
       {/* =============================== MODALS =========================== */}
-      {/* modal for deleting users */}
-      <el-dialog>
-        <dialog
-          id="dialog"
-          aria-labelledby="dialog-title"
-          className="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent"
-        >
-          <el-dialog-backdrop className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"></el-dialog-backdrop>
 
-          <div
-            tabIndex="0"
-            className="flex min-h-full items-end justify-center p-4 text-center focus:outline-none sm:items-center sm:p-0"
-          >
-            <el-dialog-panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      data-slot="icon"
-                      aria-hidden="true"
-                      className="size-6 text-red-600"
-                    >
-                      <path
-                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3
-                      id="dialog-title"
-                      className="text-base font-semibold text-gray-900"
-                    >
-                      Delete user
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Are you sure you want to delte this user? User data will
-                        be permanently removed. This action cannot be undone.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      {/* Delete User Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gray-500/75 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg
+                  className="h-6 w-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mt-2">
+                Delete User
+              </h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to delete {userToDelete?.f_name}{" "}
+                  {userToDelete?.l_name}? This action cannot be undone.
+                </p>
+              </div>
+              <div className="items-center px-4 py-3">
                 <button
-                  type="button"
-                  command="close"
-                  commandfor="dialog"
-                  className="inline-flex w-full justify-center cursor-pointer rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-red-500 sm:ml-3 sm:w-auto"
+                  onClick={handleDeleteUser}
+                  className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300"
                 >
                   Delete
                 </button>
                 <button
-                  type="button"
-                  command="close"
-                  commandfor="dialog"
-                  className="mt-3 inline-flex w-full justify-center cursor-pointer rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                  onClick={closeModals}
+                  className="px-4 py-2 bg-white text-gray-800 text-base font-medium rounded-md border border-gray-300 w-full shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 mt-2"
                 >
                   Cancel
                 </button>
               </div>
-            </el-dialog-panel>
+            </div>
           </div>
-        </dialog>
-      </el-dialog>
-      {/* modal for adding users by the admin*/}
-      <el-dialog>
-        <dialog
-          id="add_user"
-          aria-labelledby="dialog-title"
-          className="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent"
-        >
-          <el-dialog-backdrop className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"></el-dialog-backdrop>
+        </div>
+      )}
 
-          <div
-            tabIndex="0"
-            className="flex min-h-full items-end justify-center p-4 text-center focus:outline-none sm:items-center sm:p-0"
-          >
-            <el-dialog-panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="relative mx-auto w-full max-w-md bg-white px-6 pt-10 pb-8 mt-4 sm:px-10">
-                    <div className="w-full">
-                      <div className="flex flex-col items-center justify-center">
-                        <img src={CompanyLogo} alt="MTL Logo" />
-                        <h1 className="text-2xl font-md mt-3 text-gray-900">
-                          Add User
-                        </h1>
-                      </div>
-                      <div className="mt-5">
-                        <form action="">
-                          <div className="relative mt-6">
-                            <input
-                              type="text"
-                              name="email"
-                              id="f-name"
-                              placeholder="First Name"
-                              className="peer mt-1 w-full border-b-2 border-gray-300 px-0 py-1 placeholder:text-transparent focus:border-gray-500 focus:outline-none"
-                              autoComplete="NA"
-                            />
-                            <label className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800">
-                              First Name
-                            </label>
-                          </div>
-                          <div className="relative mt-6">
-                            <input
-                              type="text"
-                              name="email"
-                              id="surname"
-                              placeholder="Surname"
-                              className="peer mt-1 w-full border-b-2 border-gray-300 px-0 py-1 placeholder:text-transparent focus:border-gray-500 focus:outline-none"
-                              autoComplete="NA"
-                            />
-                            <label className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800">
-                              Surname
-                            </label>
-                          </div>
-                          <div className="relative mt-6">
-                            <input
-                              type="email"
-                              name="email"
-                              id="email"
-                              placeholder="Email Address"
-                              className="peer mt-1 w-full border-b-2 border-gray-300 px-0 py-1 placeholder:text-transparent focus:border-gray-500 focus:outline-none"
-                              autoComplete="NA"
-                            />
-                            <label className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800">
-                              Email Address
-                            </label>
-                          </div>
-                          <div className="relative mt-6">
-                            <input
-                              type="password"
-                              name="password"
-                              id="password"
-                              placeholder="Password"
-                              className="peer peer mt-1 w-full border-b-2 border-gray-300 px-0 py-1 placeholder:text-transparent focus:border-gray-500 focus:outline-none"
-                            />
-                            <label className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800">
-                              Password
-                            </label>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
+      {/* Add User Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-gray-500/75 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex flex-col items-center justify-center">
+                <img src={CompanyLogo} alt="MTL Logo" />
+                <h1 className="text-2xl font-md mt-1 text-gray-900">
+                  Add User
+                </h1>
+              </div>
+              <div className="mt-6">
+                <form onSubmit={handleAddUser}>
+                  <div className="relative mt-4">
+                    <input
+                      type="text"
+                      name="f_name"
+                      id="f-name"
+                      placeholder="Firstname"
+                      className={`peer mt-1 w-full border-b-2 px-0 py-1 placeholder:text-transparent focus:outline-none ${
+                        errors.f_name
+                          ? "border-red-500"
+                          : "border-gray-300 focus:border-gray-500"
+                      }`}
+                      autoComplete="NA"
+                      value={formData.f_name}
+                      onChange={handleInputChange}
+                    />
+                    <label
+                      htmlFor="f-name"
+                      className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800"
+                    >
+                      firstname
+                    </label>
+                    {errors.f_name && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.f_name}
+                      </p>
+                    )}
                   </div>
-                </div>
+
+                  <div className="relative mt-4">
+                    <input
+                      type="text"
+                      name="l_name"
+                      id="l-name"
+                      placeholder="Last Name"
+                      className={`peer mt-1 w-full border-b-2 px-0 py-1 placeholder:text-transparent focus:outline-none ${
+                        errors.l_name
+                          ? "border-red-500"
+                          : "border-gray-300 focus:border-gray-500"
+                      }`}
+                      autoComplete="NA"
+                      value={formData.l_name}
+                      onChange={handleInputChange}
+                    />
+                    <label
+                      htmlFor="l-name"
+                      className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800"
+                    >
+                      surname
+                    </label>
+                    {errors.l_name && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.l_name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="relative mt-4">
+                    <input
+                      type="email"
+                      name="email"
+                      id="email"
+                      placeholder="Email Address"
+                      className={`peer mt-1 w-full border-b-2 px-0 py-1 placeholder:text-transparent focus:outline-none ${
+                        errors.email
+                          ? "border-red-500"
+                          : "border-gray-300 focus:border-gray-500"
+                      }`}
+                      autoComplete="NA"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                    />
+                    <label
+                      htmlFor="email"
+                      className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800"
+                    >
+                      email address
+                    </label>
+                    {errors.email && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.email}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="relative mt-6">
+                    <select
+                      name="department"
+                      id="department"
+                      className={`peer mt-1 w-full border-b-2 bg-transparent px-0 py-1 focus:outline-none ${
+                        errors.department
+                          ? "border-red-500"
+                          : "border-gray-300 focus:border-gray-500"
+                      }`}
+                      autoComplete="NA"
+                      required
+                      value={formData.department}
+                      onChange={handleInputChange}
+                    >
+                      <option value="" disabled hidden></option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Technical">Technical</option>
+                    </select>
+                    <label
+                      htmlFor="department"
+                      className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800"
+                    >
+                      select department
+                    </label>
+                    {errors.department && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.department}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="relative mt-6">
+                    <select
+                      name="role"
+                      id="role"
+                      className={`peer mt-1 w-full border-b-2 bg-transparent px-0 py-1 focus:outline-none ${
+                        errors.role
+                          ? "border-red-500"
+                          : "border-gray-300 focus:border-gray-500"
+                      }`}
+                      autoComplete="NA"
+                      required
+                      value={formData.role}
+                      onChange={handleInputChange}
+                    >
+                      <option value="" disabled hidden></option>
+                      <option value="Wireless Engineer">
+                        Wireless Engineer
+                      </option>
+                      <option value="IP Broadband Engineer">
+                        IP Broadband Engineer
+                      </option>
+                      <option value="Sales Executive">Sales Executive</option>
+                      <option value="Accountant">Accountant</option>
+                      <option value="Solutions">SSE</option>
+                    </select>
+                    <label
+                      htmlFor="role"
+                      className="pointer-events-none absolute top-0 left-0 origin-left -translate-y-1/2 transform text-sm text-gray-800 opacity-75 transition-all duration-100 ease-in-out peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:top-0 peer-focus:pl-0 peer-focus:text-sm peer-focus:text-gray-800"
+                    >
+                      select role
+                    </label>
+                    {errors.role && (
+                      <p className="text-red-500 text-xs mt-1">{errors.role}</p>
+                    )}
+                  </div>
+
+                  {errors.general && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-red-600 text-sm text-center">
+                        {errors.general}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="bg-white px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 mt-6">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="inline-flex w-full justify-center cursor-pointer rounded-md bg-[midnightblue] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-blue-800 sm:ml-3 sm:w-auto disabled:opacity-50"
+                    >
+                      {loading ? "Adding..." : "Add"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={closeModals}
+                      className="mt-3 inline-flex w-full justify-center cursor-pointer rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                <button
-                  type="button"
-                  command="close"
-                  commandfor="add_user"
-                  className="inline-flex w-full justify-center cursor-pointer rounded-md bg-[midnightblue] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-blue-800 sm:ml-3 sm:w-auto"
-                >
-                  Add
-                </button>
-                <button
-                  type="button"
-                  command="close"
-                  commandfor="add_user"
-                  className="mt-3 inline-flex w-full justify-center cursor-pointer rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                >
-                  Cancel
-                </button>
-              </div>
-            </el-dialog-panel>
+            </div>
           </div>
-        </dialog>
-      </el-dialog>
+        </div>
+      )}
     </div>
   );
 };

@@ -17,6 +17,8 @@ import Login from "./pages/Login.jsx";
 import { AuthProvider } from "./hooks/UseAuth.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import SignUp from "./pages/SignUp.jsx";
+import AllProjectsSpecificProjectLayout from "./Layouts/AllProjectsSpecificProjectLayout.jsx";
+import SpecificProject from "./pages/SpecificProject.jsx";
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
@@ -33,7 +35,13 @@ const App = () => {
         >
           <Route index element={<Home />} />
           <Route path="home/dashboard" element={<Dashboard />} />
-          <Route path="home/projects" element={<Projects />} />
+          <Route
+            path="home/projects"
+            element={<AllProjectsSpecificProjectLayout />}
+          >
+            <Route index element={<Projects />} />
+            <Route path=":id" element={<SpecificProject />} />
+          </Route>
           <Route
             path="home/admin"
             element={
