@@ -8,7 +8,6 @@ import {
   FaTimes,
   FaCalendar,
   FaUser,
-  FaTag,
   FaDollarSign,
   FaCheckCircle,
   FaClock,
@@ -16,9 +15,10 @@ import {
   FaBuilding,
   FaEnvelope,
   FaPhone,
-  FaCog,
   FaUsers,
   FaFileAlt,
+  FaArrowRight,
+  FaRocket,
 } from "react-icons/fa";
 
 const SpecificProject = () => {
@@ -32,6 +32,7 @@ const SpecificProject = () => {
   const [saving, setSaving] = useState(false);
   const [boqItems, setBoqItems] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [showAllStages, setShowAllStages] = useState(false);
 
   // Fetch project data
   useEffect(() => {
@@ -70,10 +71,10 @@ const SpecificProject = () => {
 
   // Handle form input changes
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     setEditForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "number" ? (value === "" ? "" : parseInt(value)) : value,
     }));
   };
 
@@ -81,13 +82,26 @@ const SpecificProject = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
+
+      // Prepare update data with only allowed fields
+      const updateData = {
+        customer_name: editForm.customer_name || "",
+        customer_organization: editForm.customer_organization || "",
+        customer_email: editForm.customer_email || "",
+        customer_phone: editForm.customer_phone || "",
+        service_type: editForm.service_type || "",
+        support_model: editForm.support_model || "",
+        number_of_users: editForm.number_of_users || null,
+        managed_service: editForm.managed_service || "",
+      };
+
       const response = await fetch(`/api/projects/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(updateData),
       });
 
       const result = await response.json();
@@ -105,7 +119,6 @@ const SpecificProject = () => {
           }
         }
         setIsEditing(false);
-        // Show success message
         alert("Project updated successfully!");
       } else {
         throw new Error(result.message || "Failed to update project");
@@ -153,7 +166,9 @@ const SpecificProject = () => {
             setEditForm(refreshResult.data);
           }
         }
-        alert(`Project advanced to ${newStage} successfully!`);
+        alert(
+          `Project advanced to ${getStageDisplayName(newStage)} successfully!`
+        );
       } else {
         throw new Error(result.message || "Failed to advance stage");
       }
@@ -165,8 +180,10 @@ const SpecificProject = () => {
 
   // Get status badge color
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
+    const statusStr = status?.toLowerCase();
+    switch (statusStr) {
       case "completed":
+      case "service_live":
         return "bg-green-100 text-green-800";
       case "in_progress":
       case "in progress":
@@ -182,8 +199,10 @@ const SpecificProject = () => {
 
   // Get status icon
   const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
+    const statusStr = status?.toLowerCase();
+    switch (statusStr) {
       case "completed":
+      case "service_live":
         return <FaCheckCircle className="text-green-500" />;
       case "in_progress":
       case "in progress":
@@ -210,6 +229,58 @@ const SpecificProject = () => {
     return boqItems.reduce((total, item) => total + (item.total_price || 0), 0);
   };
 
+  // Get stage display name
+  const getStageDisplayName = (stage) => {
+    const stageNames = {
+      DRAFT: "Draft",
+      QUOTATION: "Quotation",
+      AWAITING_CUSTOMER_ACCEPTANCE: "Awaiting Customer",
+      AWAITING_PAYMENT: "Awaiting Payment",
+      SURVEY_SCHEDULED: "Survey Scheduled",
+      READY_FOR_CONFIGURATION: "Ready for Config",
+      READY_FOR_INSTALLATION: "Ready for Install",
+      INSTALLATION_COMPLETE: "Install Complete",
+      SERVICE_LIVE: "Service Live",
+      DESIGN: "Design",
+    };
+    return stageNames[stage] || stage?.replace(/_/g, " ") || stage;
+  };
+
+  // Get next logical stages
+  const getNextStages = () => {
+    const currentStage = project?.current_stage;
+    const stageFlow = {
+      DRAFT: ["QUOTATION", "DESIGN"],
+      QUOTATION: ["AWAITING_CUSTOMER_ACCEPTANCE", "DESIGN"],
+      AWAITING_CUSTOMER_ACCEPTANCE: ["AWAITING_PAYMENT"],
+      AWAITING_PAYMENT: ["SURVEY_SCHEDULED"],
+      SURVEY_SCHEDULED: ["READY_FOR_CONFIGURATION"],
+      READY_FOR_CONFIGURATION: ["READY_FOR_INSTALLATION"],
+      READY_FOR_INSTALLATION: ["INSTALLATION_COMPLETE"],
+      INSTALLATION_COMPLETE: ["SERVICE_LIVE"],
+      DESIGN: ["READY_FOR_INSTALLATION"],
+      SERVICE_LIVE: [],
+    };
+
+    return stageFlow[currentStage] || [];
+  };
+
+  // Get all stages for the dropdown
+  const getAllStages = () => {
+    return [
+      "DRAFT",
+      "QUOTATION",
+      "DESIGN",
+      "AWAITING_CUSTOMER_ACCEPTANCE",
+      "AWAITING_PAYMENT",
+      "SURVEY_SCHEDULED",
+      "READY_FOR_CONFIGURATION",
+      "READY_FOR_INSTALLATION",
+      "INSTALLATION_COMPLETE",
+      "SERVICE_LIVE",
+    ].filter((stage) => stage !== project?.current_stage);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -232,7 +303,7 @@ const SpecificProject = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => navigate("/home/projects")}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Projects
           </button>
@@ -253,7 +324,7 @@ const SpecificProject = () => {
           </p>
           <button
             onClick={() => navigate("/home/projects")}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Projects
           </button>
@@ -262,10 +333,13 @@ const SpecificProject = () => {
     );
   }
 
+  const nextStages = getNextStages();
+  const allStages = getAllStages();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Helmet>
-        <title>MTL SSE</title>
+        <title>MTL SSE - {project.project_code}</title>
         <meta
           name="description"
           content={`Details for project ${project.project_code}`}
@@ -276,17 +350,17 @@ const SpecificProject = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-2">
-            <div className="flex items-center space-x-2 md:space-x-4">
+            <div className="flex items-center xs:space-x-1 sm:space-x-2 md:space-x-4">
               <button
                 onClick={() => navigate("/home/projects")}
-                className="flex items-center text-gray-600 cursor-pointer hover:text-gray-900 transition-colors"
+                className="flex items-center justify-between text-gray-600 cursor-pointer hover:text-gray-900 transition-colors"
               >
                 <FaArrowLeft className="mr-2" />
-                Back to Projects
+                <div className="hidden md:block">Back to Projects</div>
               </button>
               <div className="h-6 w-px bg-gray-300"></div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900 hidden md:block">
                   {project.project_code}
                 </h1>
                 <p className="text-gray-600">{project.customer_name}</p>
@@ -297,8 +371,8 @@ const SpecificProject = () => {
                 )}`}
               >
                 {getStatusIcon(project.current_stage)}
-                <span className="ml-1 capitalize">
-                  {project.current_stage?.replace("_", " ")}
+                <span className="ml-1">
+                  {getStageDisplayName(project.current_stage)}
                 </span>
               </span>
             </div>
@@ -307,27 +381,42 @@ const SpecificProject = () => {
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center bg-blue-600 text-white px-4 py-2 cursor-pointer rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center bg-blue-600 text-white px-2 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
                 >
                   <FaEdit className="mr-2" />
-                  Edit Project
+                  <div>
+                    Edit <span className="hidden md:inline-flex">Project</span>
+                  </div>
                 </button>
               ) : (
                 <>
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                    className="flex items-center bg-green-600 text-white px-1 py-1 md:px-4 md:py-2 cursor-pointer rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
-                    <FaSave className="mr-2" />
-                    {saving ? "Saving..." : "Save Changes"}
+                    <FaSave size={24} className="mr-2" />
+                    {saving ? (
+                      "Saving..."
+                    ) : (
+                      <div>
+                        {/* <span className="md:hidden">
+                          <FaSave className="mr-2" />
+                        </span> */}
+                        <span className="hidden md:inline-flex">
+                          Save changes
+                        </span>
+                      </div>
+                    )}
                   </button>
                   <button
                     onClick={handleCancel}
-                    className="flex items-center bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                    className="flex items-center bg-gray-600 text-white px-1 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
                   >
-                    <FaTimes className="mr-2" />
-                    Cancel
+                    <FaTimes size={24} className="mr-2" />
+                    <div>
+                      <span className="hidden md:inline-flex">Cancel</span>
+                    </div>
                   </button>
                 </>
               )}
@@ -350,90 +439,78 @@ const SpecificProject = () => {
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-start">
-                    <FaUser className="text-gray-400 mt-1 mr-3" />
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Customer Name
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="customer_name"
-                          value={editForm.customer_name || ""}
-                          onChange={handleInputChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">{project.customer_name}</p>
-                      )}
-                    </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Customer Name
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="customer_name"
+                        value={editForm.customer_name || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{project.customer_name}</p>
+                    )}
                   </div>
 
-                  <div className="flex items-start">
-                    <FaBuilding className="text-gray-400 mt-1 mr-3" />
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Organization
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="customer_organization"
-                          value={editForm.customer_organization || ""}
-                          onChange={handleInputChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">
-                          {project.customer_organization || "Not specified"}
-                        </p>
-                      )}
-                    </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Organization
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="customer_organization"
+                        value={editForm.customer_organization || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900">
+                        {project.customer_organization || "Not specified"}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex items-start">
-                    <FaEnvelope className="text-gray-400 mt-1 mr-3" />
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="email"
-                          name="customer_email"
-                          value={editForm.customer_email || ""}
-                          onChange={handleInputChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">
-                          {project.customer_email || "Not specified"}
-                        </p>
-                      )}
-                    </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Email
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        name="customer_email"
+                        value={editForm.customer_email || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900">
+                        {project.customer_email || "Not specified"}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex items-start">
-                    <FaPhone className="text-gray-400 mt-1 mr-3" />
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="customer_phone"
-                          value={editForm.customer_phone || ""}
-                          onChange={handleInputChange}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">
-                          {project.customer_phone || "Not specified"}
-                        </p>
-                      )}
-                    </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Phone
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="customer_phone"
+                        value={editForm.customer_phone || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900">
+                        {project.customer_phone || "Not specified"}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -448,8 +525,8 @@ const SpecificProject = () => {
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
                       Service Type
                     </label>
                     {isEditing ? (
@@ -459,6 +536,7 @@ const SpecificProject = () => {
                         onChange={handleInputChange}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
+                        <option value="">Select Service Type</option>
                         <option value="VPN">VPN</option>
                         <option value="Internet">Internet</option>
                         <option value="SIP">SIP</option>
@@ -469,8 +547,8 @@ const SpecificProject = () => {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
                       Support Model
                     </label>
                     {isEditing ? (
@@ -480,7 +558,7 @@ const SpecificProject = () => {
                         onChange={handleInputChange}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
-                        <option value="" disabled hidden></option>
+                        <option value="">Select Support Model</option>
                         <option value="Internal">Internal</option>
                         <option value="Outsourced">Outsourced</option>
                       </select>
@@ -491,8 +569,8 @@ const SpecificProject = () => {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
                       Number of Users
                     </label>
                     {isEditing ? (
@@ -501,6 +579,7 @@ const SpecificProject = () => {
                         name="number_of_users"
                         value={editForm.number_of_users || ""}
                         onChange={handleInputChange}
+                        min="0"
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
                     ) : (
@@ -510,8 +589,8 @@ const SpecificProject = () => {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
                       Managed Service
                     </label>
                     {isEditing ? (
@@ -521,9 +600,7 @@ const SpecificProject = () => {
                         onChange={handleInputChange}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
-                        <option value="" disabled hidden>
-                          Select Service Type
-                        </option>
+                        <option value="">Select Service Type</option>
                         <option value="Managed">Managed</option>
                         <option value="Unmanaged">Unmanaged</option>
                       </select>
@@ -553,9 +630,7 @@ const SpecificProject = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left py-2 font-medium">
-                            Item Type
-                          </th>
+                          <th className="text-left py-2 font-medium">Type</th>
                           <th className="text-left py-2 font-medium">
                             Description
                           </th>
@@ -596,6 +671,81 @@ const SpecificProject = () => {
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
+            {/* Stage Advancement Card - COMPACT DESIGN */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <FaRocket className="mr-2 text-blue-600" />
+                  Advance Stage
+                </h2>
+              </div>
+              <div className="p-6">
+                {/* Quick Actions - Primary Buttons */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-gray-700">
+                    Quick Actions
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {nextStages.slice(0, 4).map((stage) => (
+                      <button
+                        key={stage}
+                        onClick={() => advanceStage(stage)}
+                        className="bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors font-medium"
+                      >
+                        {getStageDisplayName(stage)}
+                      </button>
+                    ))}
+                    {nextStages.length === 0 && (
+                      <div className="col-span-2 text-center py-2 text-gray-500 text-sm">
+                        No next stages available
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* All Stages Dropdown */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-700">
+                      All Stages
+                    </h3>
+                    <button
+                      onClick={() => setShowAllStages(!showAllStages)}
+                      className="text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      {showAllStages ? "Hide" : "Show All"}
+                    </button>
+                  </div>
+
+                  {showAllStages && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {allStages.map((stage) => (
+                        <button
+                          key={stage}
+                          onClick={() => advanceStage(stage)}
+                          className="bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-200 transition-colors border border-gray-300"
+                        >
+                          {getStageDisplayName(stage)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Current Stage Indicator */}
+                <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-blue-800">
+                      Current Stage:
+                    </span>
+                    <span className="text-sm font-semibold text-blue-900">
+                      {getStageDisplayName(project.current_stage)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Project Timeline Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -604,12 +754,12 @@ const SpecificProject = () => {
                 </h2>
               </div>
               <div className="p-6">
-                <div className="space-y-4">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {project.stages &&
                     project.stages.map((stage, index) => (
                       <div key={index} className="flex items-start">
                         <div
-                          className={`flex-shrink-0 w-3 h-3 rounded-full mt-1 ${
+                          className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
                             stage.status === "COMPLETED"
                               ? "bg-green-500"
                               : stage.status === "IN_PROGRESS"
@@ -621,8 +771,8 @@ const SpecificProject = () => {
                         />
                         <div className="ml-3 flex-1">
                           <div className="flex justify-between items-start">
-                            <span className="font-medium text-gray-900 capitalize">
-                              {stage.stage?.replace("_", " ")}
+                            <span className="text-sm font-medium text-gray-900">
+                              {getStageDisplayName(stage.stage)}
                             </span>
                             <span
                               className={`text-xs px-2 py-1 rounded ${
@@ -639,51 +789,20 @@ const SpecificProject = () => {
                             </span>
                           </div>
                           {stage.assigned_to && (
-                            <p className="text-sm text-gray-600">
-                              Assigned to: {stage.assigned_to}
+                            <p className="text-xs text-gray-600">
+                              {stage.assigned_to}
                             </p>
                           )}
                           {stage.entered_date && (
                             <p className="text-xs text-gray-500">
-                              Started:{" "}
                               {new Date(
                                 stage.entered_date
-                              ).toLocaleDateString()}
-                            </p>
-                          )}
-                          {stage.completed_date && (
-                            <p className="text-xs text-gray-500">
-                              Completed:{" "}
-                              {new Date(
-                                stage.completed_date
                               ).toLocaleDateString()}
                             </p>
                           )}
                         </div>
                       </div>
                     ))}
-                </div>
-
-                {/* Stage Advancement Buttons */}
-                <div className="mt-6 space-y-2">
-                  <button
-                    onClick={() => advanceStage("QUOTATION")}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded cursor-pointer hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    Advance to Quotation
-                  </button>
-                  <button
-                    onClick={() => advanceStage("DESIGN")}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded cursor-pointer hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    Advance to Design
-                  </button>
-                  <button
-                    onClick={() => advanceStage("INSTALLATION")}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded cursor-pointer hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    Advance to Installation
-                  </button>
                 </div>
               </div>
             </div>
