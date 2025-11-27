@@ -19,6 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import AllProjectsSpecificProjectLayout from "./Layouts/AllProjectsSpecificProjectLayout.jsx";
 import SpecificProject from "./pages/SpecificProject.jsx";
+import Notifications from "./pages/Notifications.jsx";
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
@@ -43,7 +44,7 @@ const App = () => {
             <Route path=":id" element={<SpecificProject />} />
           </Route>
           <Route
-            path="home/admin"
+            path="home/system-management"
             element={
               <ProtectedRoute requiredRole={["Admin", "SuperAdmin"]}>
                 <Admin />
@@ -52,6 +53,7 @@ const App = () => {
           />
           <Route path="home/reports" element={<Reports />} />
           <Route path="home/profile" element={<UserProfile />} />
+          <Route path="/home/notifications" element={<Notifications />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </>

@@ -19,6 +19,7 @@ import {
   FaFileAlt,
   FaArrowRight,
   FaRocket,
+  FaBug,
 } from "react-icons/fa";
 
 const SpecificProject = () => {
@@ -33,30 +34,53 @@ const SpecificProject = () => {
   const [boqItems, setBoqItems] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [showAllStages, setShowAllStages] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [advancingStage, setAdvancingStage] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+
+  // Define the actual ProjectStatus enum values from your models.py
+  const PROJECT_STATUS = {
+    DRAFT: "Draft",
+    UNDER_DESIGN: "Under Design",
+    AWAITING_COSTING: "Awaiting Costing",
+    AWAITING_CUSTOMER_ACCEPTANCE: "Awaiting Customer Acceptance",
+    AWAITING_PAYMENT: "Awaiting Payment",
+    SURVEY_SCHEDULED: "Survey Scheduled",
+    SURVEY_COMPLETE: "Survey Complete",
+    READY_FOR_CONFIGURATION: "Ready for Configuration",
+    READY_FOR_INSTALLATION: "Ready for Installation",
+    INSTALLATION_COMPLETE: "Installation Complete",
+    SERVICE_LIVE: "Service Live",
+  };
 
   // Fetch project data
   useEffect(() => {
     const fetchProject = async () => {
       try {
         setLoading(true);
+
         const response = await fetch(`/api/projects/${id}`, {
           credentials: "include",
         });
 
         if (response.ok) {
           const result = await response.json();
+
           if (result.success) {
             setProject(result.data);
             setEditForm(result.data);
             setBoqItems(result.data.boq_items || []);
             setDocuments(result.data.documents || []);
+            console.log("Project data loaded:", result.data);
           } else {
             setError(result.message || "Failed to load project");
           }
         } else if (response.status === 404) {
           setError("Project not found");
+        } else if (response.status === 403) {
+          setError("Access denied");
         } else {
-          setError("Failed to load project");
+          setError("Failed to load project - Server error");
         }
       } catch (error) {
         console.error("Failed to fetch project:", error);
@@ -68,6 +92,33 @@ const SpecificProject = () => {
 
     fetchProject();
   }, [id]);
+
+  // Fetch tasks
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch("/api/workflow/tasks", {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            const projectTasks = result.data.filter(
+              (task) => task.project_id === id
+            );
+            setTasks(projectTasks);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch tasks:", error);
+      }
+    };
+
+    if (project) {
+      fetchTasks();
+    }
+  }, [id, project?.current_stage]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -83,7 +134,6 @@ const SpecificProject = () => {
     try {
       setSaving(true);
 
-      // Prepare update data with only allowed fields
       const updateData = {
         customer_name: editForm.customer_name || "",
         customer_organization: editForm.customer_organization || "",
@@ -107,17 +157,7 @@ const SpecificProject = () => {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        // Refresh project data
-        const refreshResponse = await fetch(`/api/projects/${id}`, {
-          credentials: "include",
-        });
-        if (refreshResponse.ok) {
-          const refreshResult = await refreshResponse.json();
-          if (refreshResult.success) {
-            setProject(refreshResult.data);
-            setEditForm(refreshResult.data);
-          }
-        }
+        await fetchProjectData();
         setIsEditing(false);
         alert("Project updated successfully!");
       } else {
@@ -137,44 +177,123 @@ const SpecificProject = () => {
     setIsEditing(false);
   };
 
-  // Advance project stage
-  const advanceStage = async (newStage) => {
+  // Refresh project data
+  const fetchProjectData = async () => {
     try {
+      const response = await fetch(`/api/projects/${id}`, {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setProject(result.data);
+          setEditForm(result.data);
+          setBoqItems(result.data.boq_items || []);
+          setDocuments(result.data.documents || []);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to refresh project:", error);
+    }
+  };
+
+  // Get the enum key from display value
+  const getStageKeyFromValue = (value) => {
+    return Object.keys(PROJECT_STATUS).find(
+      (key) => PROJECT_STATUS[key] === value
+    );
+  };
+
+  // Get the display value from enum key
+  const getStageValueFromKey = (key) => {
+    return PROJECT_STATUS[key] || key;
+  };
+
+  // Test stage advancement with debug endpoint
+  const testStageAdvancement = async (stageValue) => {
+    try {
+      const stageKey = getStageKeyFromValue(stageValue);
+
+      const requestBody = {
+        project_id: id,
+        new_stage: stageKey,
+      };
+
+      console.log("Testing stage advancement with:", requestBody);
+
+      const response = await fetch("/api/projects/debug/advance-stage", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(requestBody),
+      });
+
+      const result = await response.json();
+      console.log("Debug test result:", result);
+
+      return result;
+    } catch (error) {
+      console.error("Debug test failed:", error);
+      return { success: false, message: error.message };
+    }
+  };
+
+  // Advance project stage
+  const advanceStage = async (stageValue) => {
+    try {
+      setAdvancingStage(true);
+
+      // Convert display value to enum key for the API
+      const stageKey = getStageKeyFromValue(stageValue);
+      if (!stageKey) {
+        alert(`Invalid stage: ${stageValue}`);
+        return;
+      }
+
+      console.log(`Advancing to stage: ${stageValue} (${stageKey})`);
+
+      const requestBody = {
+        new_stage: stageKey,
+        remarks: `Stage advanced to ${stageValue} via web interface`,
+      };
+
+      console.log("Sending request:", requestBody);
+
       const response = await fetch(`/api/projects/${id}/stage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          new_stage: newStage,
-          remarks: `Stage advanced to ${newStage}`,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
+      console.log("Stage advancement response:", result);
 
       if (response.ok && result.success) {
-        // Refresh project data
-        const refreshResponse = await fetch(`/api/projects/${id}`, {
-          credentials: "include",
-        });
-        if (refreshResponse.ok) {
-          const refreshResult = await refreshResponse.json();
-          if (refreshResult.success) {
-            setProject(refreshResult.data);
-            setEditForm(refreshResult.data);
-          }
-        }
-        alert(
-          `Project advanced to ${getStageDisplayName(newStage)} successfully!`
-        );
+        await fetchProjectData();
+        alert(`Project advanced to ${stageValue} successfully!`);
+        setShowAllStages(false);
       } else {
-        throw new Error(result.message || "Failed to advance stage");
+        // If normal advancement fails, try debug mode
+        if (debugMode) {
+          const debugResult = await testStageAdvancement(stageValue);
+          alert(
+            `Normal advancement failed. Debug result: ${debugResult.message}`
+          );
+        } else {
+          throw new Error(result.message || "Failed to advance stage");
+        }
       }
     } catch (error) {
       console.error("Failed to advance stage:", error);
       alert("Failed to advance stage: " + error.message);
+    } finally {
+      setAdvancingStage(false);
     }
   };
 
@@ -220,7 +339,7 @@ const SpecificProject = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "MWK",
     }).format(amount || 0);
   };
 
@@ -231,54 +350,75 @@ const SpecificProject = () => {
 
   // Get stage display name
   const getStageDisplayName = (stage) => {
-    const stageNames = {
-      DRAFT: "Draft",
-      QUOTATION: "Quotation",
-      AWAITING_CUSTOMER_ACCEPTANCE: "Awaiting Customer",
-      AWAITING_PAYMENT: "Awaiting Payment",
-      SURVEY_SCHEDULED: "Survey Scheduled",
-      READY_FOR_CONFIGURATION: "Ready for Config",
-      READY_FOR_INSTALLATION: "Ready for Install",
-      INSTALLATION_COMPLETE: "Install Complete",
-      SERVICE_LIVE: "Service Live",
-      DESIGN: "Design",
-    };
-    return stageNames[stage] || stage?.replace(/_/g, " ") || stage;
+    if (!stage) return "Unknown";
+
+    // If stage is already a display value, return it
+    if (Object.values(PROJECT_STATUS).includes(stage)) {
+      return stage;
+    }
+
+    // If stage is an enum key, convert it
+    return PROJECT_STATUS[stage] || stage?.replace(/_/g, " ") || stage;
   };
 
-  // Get next logical stages
+  // Get next logical stages based on your workflow
   const getNextStages = () => {
     const currentStage = project?.current_stage;
+
+    // Convert current stage to display value for comparison
+    const currentStageValue = getStageDisplayName(currentStage);
+
     const stageFlow = {
-      DRAFT: ["QUOTATION", "DESIGN"],
-      QUOTATION: ["AWAITING_CUSTOMER_ACCEPTANCE", "DESIGN"],
-      AWAITING_CUSTOMER_ACCEPTANCE: ["AWAITING_PAYMENT"],
-      AWAITING_PAYMENT: ["SURVEY_SCHEDULED"],
-      SURVEY_SCHEDULED: ["READY_FOR_CONFIGURATION"],
-      READY_FOR_CONFIGURATION: ["READY_FOR_INSTALLATION"],
-      READY_FOR_INSTALLATION: ["INSTALLATION_COMPLETE"],
-      INSTALLATION_COMPLETE: ["SERVICE_LIVE"],
-      DESIGN: ["READY_FOR_INSTALLATION"],
-      SERVICE_LIVE: [],
+      [PROJECT_STATUS.DRAFT]: [PROJECT_STATUS.UNDER_DESIGN],
+      [PROJECT_STATUS.UNDER_DESIGN]: [PROJECT_STATUS.AWAITING_COSTING],
+      [PROJECT_STATUS.AWAITING_COSTING]: [
+        PROJECT_STATUS.AWAITING_CUSTOMER_ACCEPTANCE,
+      ],
+      [PROJECT_STATUS.AWAITING_CUSTOMER_ACCEPTANCE]: [
+        PROJECT_STATUS.AWAITING_PAYMENT,
+      ],
+      [PROJECT_STATUS.AWAITING_PAYMENT]: [PROJECT_STATUS.SURVEY_SCHEDULED],
+      [PROJECT_STATUS.SURVEY_SCHEDULED]: [PROJECT_STATUS.SURVEY_COMPLETE],
+      [PROJECT_STATUS.SURVEY_COMPLETE]: [
+        PROJECT_STATUS.READY_FOR_CONFIGURATION,
+      ],
+      [PROJECT_STATUS.READY_FOR_CONFIGURATION]: [
+        PROJECT_STATUS.READY_FOR_INSTALLATION,
+      ],
+      [PROJECT_STATUS.READY_FOR_INSTALLATION]: [
+        PROJECT_STATUS.INSTALLATION_COMPLETE,
+      ],
+      [PROJECT_STATUS.INSTALLATION_COMPLETE]: [PROJECT_STATUS.SERVICE_LIVE],
+      [PROJECT_STATUS.SERVICE_LIVE]: [],
     };
 
-    return stageFlow[currentStage] || [];
+    return stageFlow[currentStageValue] || [];
   };
 
   // Get all stages for the dropdown
   const getAllStages = () => {
-    return [
-      "DRAFT",
-      "QUOTATION",
-      "DESIGN",
-      "AWAITING_CUSTOMER_ACCEPTANCE",
-      "AWAITING_PAYMENT",
-      "SURVEY_SCHEDULED",
-      "READY_FOR_CONFIGURATION",
-      "READY_FOR_INSTALLATION",
-      "INSTALLATION_COMPLETE",
-      "SERVICE_LIVE",
-    ].filter((stage) => stage !== project?.current_stage);
+    // Return all stages except current one
+    return Object.values(PROJECT_STATUS).filter(
+      (stage) => stage !== getStageDisplayName(project?.current_stage)
+    );
+  };
+
+  // Check if stage is completed in project history
+  const isStageCompleted = (stageValue) => {
+    if (!project?.stages) return false;
+
+    // Convert stageValue to enum key for comparison
+    const stageKey = getStageKeyFromValue(stageValue);
+
+    return project.stages.some((s) => {
+      const stageKeyFromHistory = getStageKeyFromValue(s.stage);
+      return stageKeyFromHistory === stageKey && s.status === "COMPLETED";
+    });
+  };
+
+  // Check if stage is the current stage
+  const isCurrentStage = (stageValue) => {
+    return getStageDisplayName(project?.current_stage) === stageValue;
   };
 
   if (loading) {
@@ -303,7 +443,7 @@ const SpecificProject = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => navigate("/home/projects")}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Projects
           </button>
@@ -324,7 +464,7 @@ const SpecificProject = () => {
           </p>
           <button
             onClick={() => navigate("/home/projects")}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Projects
           </button>
@@ -350,73 +490,60 @@ const SpecificProject = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-2">
-            <div className="flex items-center xs:space-x-1 sm:space-x-2 md:space-x-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate("/home/projects")}
-                className="flex items-center justify-between text-gray-600 cursor-pointer hover:text-gray-900 transition-colors"
+                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <FaArrowLeft className="mr-2" />
-                <div className="hidden md:block">Back to Projects</div>
+                <span className="hidden md:block">Back to Projects</span>
               </button>
               <div className="h-6 w-px bg-gray-300"></div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 hidden md:block">
+                <h1 className="text-2xl font-bold text-gray-900 hidden md:inline-block">
                   {project.project_code}
                 </h1>
                 <p className="text-gray-600">{project.customer_name}</p>
               </div>
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                  project.current_stage
-                )}`}
-              >
-                {getStatusIcon(project.current_stage)}
-                <span className="ml-1">
-                  {getStageDisplayName(project.current_stage)}
-                </span>
-              </span>
             </div>
 
             <div className="flex items-center space-x-3">
+              {/* <button
+                onClick={() => setDebugMode(!debugMode)}
+                className={`flex items-center px-3 py-2 rounded-lg text-sm ${
+                  debugMode
+                    ? "bg-yellow-600 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                <FaBug className="mr-2" />
+                {debugMode ? "Debug ON" : "Debug OFF"}
+              </button> */}
+
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center bg-blue-600 text-white px-2 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+                  className="flex items-center bg-blue-600 text-white px-2 py-2 md:px-4 md:py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <FaEdit className="mr-2" />
-                  <div>
-                    Edit <span className="hidden md:inline-flex">Project</span>
-                  </div>
+                  <span className="">Edit</span>
                 </button>
               ) : (
                 <>
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center bg-green-600 text-white px-1 py-1 md:px-4 md:py-2 cursor-pointer rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                    className="flex items-center bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
-                    <FaSave size={24} className="mr-2" />
-                    {saving ? (
-                      "Saving..."
-                    ) : (
-                      <div>
-                        {/* <span className="md:hidden">
-                          <FaSave className="mr-2" />
-                        </span> */}
-                        <span className="hidden md:inline-flex">
-                          Save changes
-                        </span>
-                      </div>
-                    )}
+                    <FaSave className="mr-2" />
+                    {saving ? "Saving..." : <p>save</p>}
                   </button>
                   <button
                     onClick={handleCancel}
-                    className="flex items-center bg-gray-600 text-white px-1 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                    className="flex items-center bg-gray-600 text-white px-2 py-1 rounded-lg hover:bg-gray-700 transition-colors"
                   >
-                    <FaTimes size={24} className="mr-2" />
-                    <div>
-                      <span className="hidden md:inline-flex">Cancel</span>
-                    </div>
+                    <FaTimes className="mr-2" />
+                    Cancel
                   </button>
                 </>
               )}
@@ -427,6 +554,20 @@ const SpecificProject = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {debugMode && (
+          <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
+            <div className="flex items-center">
+              <FaBug className="text-yellow-600 mr-2" />
+              <span className="font-semibold">Debug Mode Enabled</span>
+            </div>
+            <div className="mt-2 text-sm">
+              <p>Project ID: {id}</p>
+              <p>Current Stage: {getStageDisplayName(project.current_stage)}</p>
+              <p>Next Stages: {nextStages.join(", ")}</p>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Project Details */}
           <div className="lg:col-span-2 space-y-6">
@@ -614,6 +755,78 @@ const SpecificProject = () => {
               </div>
             </div>
 
+            {/* Tasks Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <FaClock className="mr-2" />
+                  Current Tasks
+                </h2>
+              </div>
+              <div className="p-6">
+                {tasks.length > 0 ? (
+                  <div className="space-y-4">
+                    {tasks.map((task, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-medium text-gray-900">
+                              {getStageDisplayName(task.stage)}
+                            </h3>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                task.status === "COMPLETED"
+                                  ? "bg-green-100 text-green-800"
+                                  : task.status === "IN_PROGRESS"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {task.status?.replace("_", " ")}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                              <span className="font-medium">Deadline:</span>{" "}
+                              {task.deadline
+                                ? new Date(task.deadline).toLocaleDateString()
+                                : "Not set"}
+                            </div>
+                            <div>
+                              <span className="font-medium">
+                                Time Remaining:
+                              </span>{" "}
+                              {task.time_remaining_hours
+                                ? `${task.time_remaining_hours}h`
+                                : "N/A"}
+                            </div>
+                          </div>
+
+                          {task.is_overdue && (
+                            <div className="mt-2 flex items-center text-red-600 text-sm">
+                              <FaExclamationTriangle className="mr-1" />
+                              Overdue
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <FaCheckCircle className="text-gray-400 text-3xl mx-auto mb-3" />
+                    <p className="text-gray-500">
+                      No active tasks for this project
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* BOQ Items Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -671,7 +884,7 @@ const SpecificProject = () => {
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
-            {/* Stage Advancement Card - COMPACT DESIGN */}
+            {/* Stage Advancement Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -680,23 +893,38 @@ const SpecificProject = () => {
                 </h2>
               </div>
               <div className="p-6">
+                {/* Current Stage Indicator */}
+                <div className="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-blue-800">
+                      Current Stage:
+                    </span>
+                    <span className="text-sm font-semibold text-blue-900">
+                      {getStageDisplayName(project.current_stage)}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Quick Actions - Primary Buttons */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium text-gray-700">
-                    Quick Actions
+                    Next Stages
                   </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {nextStages.slice(0, 4).map((stage) => (
+                  <div className="grid grid-cols-1 gap-2">
+                    {nextStages.map((stage) => (
                       <button
                         key={stage}
                         onClick={() => advanceStage(stage)}
-                        className="bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors font-medium"
+                        disabled={advancingStage}
+                        className="bg-blue-600 text-white py-3 px-4 rounded text-sm hover:bg-blue-700 transition-colors font-medium text-center disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {getStageDisplayName(stage)}
+                        {advancingStage
+                          ? "Advancing..."
+                          : `Advance to ${stage}`}
                       </button>
                     ))}
                     {nextStages.length === 0 && (
-                      <div className="col-span-2 text-center py-2 text-gray-500 text-sm">
+                      <div className="text-center py-3 text-gray-500 text-sm bg-gray-50 rounded">
                         No next stages available
                       </div>
                     )}
@@ -711,41 +939,56 @@ const SpecificProject = () => {
                     </h3>
                     <button
                       onClick={() => setShowAllStages(!showAllStages)}
-                      className="text-xs text-blue-600 hover:text-blue-800"
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
                     >
-                      {showAllStages ? "Hide" : "Show All"}
+                      {showAllStages ? "▲ Hide" : "▼ Show All"}
                     </button>
                   </div>
 
                   {showAllStages && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                       {allStages.map((stage) => (
                         <button
                           key={stage}
                           onClick={() => advanceStage(stage)}
-                          className="bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-200 transition-colors border border-gray-300"
+                          disabled={
+                            advancingStage ||
+                            isStageCompleted(stage) ||
+                            isCurrentStage(stage)
+                          }
+                          className="bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-200 transition-colors border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-left"
                         >
-                          {getStageDisplayName(stage)}
+                          <div className="flex justify-between items-center">
+                            <span>{stage}</span>
+                            {isStageCompleted(stage) && (
+                              <FaCheckCircle className="text-green-500 text-xs" />
+                            )}
+                            {isCurrentStage(stage) && (
+                              <FaClock className="text-blue-500 text-xs" />
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* Current Stage Indicator */}
-                <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-blue-800">
-                      Current Stage:
-                    </span>
-                    <span className="text-sm font-semibold text-blue-900">
-                      {getStageDisplayName(project.current_stage)}
-                    </span>
+                {debugMode && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() =>
+                        testStageAdvancement(nextStages[0] || allStages[0])
+                      }
+                      className="w-full bg-yellow-500 text-white py-2 px-4 rounded text-sm hover:bg-yellow-600 transition-colors"
+                    >
+                      Test Stage Advancement
+                    </button>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
+            {/* Rest of the sidebar components remain the same */}
             {/* Project Timeline Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">

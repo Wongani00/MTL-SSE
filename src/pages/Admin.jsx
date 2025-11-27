@@ -615,6 +615,7 @@ const Admin = () => {
                       <option value="Sales Executive">Sales Executive</option>
                       <option value="Accountant">Accountant</option>
                       <option value="Solutions">SSE</option>
+                      <option value="Admin">Admin</option>
                     </select>
                     <label
                       htmlFor="role"

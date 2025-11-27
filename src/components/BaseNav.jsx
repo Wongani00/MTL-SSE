@@ -7,6 +7,7 @@ import {
   FiShield as AdminIcon,
   FiBarChart2 as ReportsIcon,
 } from "react-icons/fi";
+import { FaArrowUp as NotificationsIcon } from "react-icons/fa";
 import { CiHome as HomeIcon } from "react-icons/ci";
 import { FaUserCircle } from "react-icons/fa";
 import ImgLog from "../assets/mtl-logo-75.png";
@@ -42,11 +43,16 @@ const BaseNav = () => {
     {
       name: "Admin",
       icon: AdminIcon,
-      to: "/home/admin",
+      to: "/home/system-management",
       roles: ["Admin", "SuperAdmin"],
     },
     { name: "Reports", icon: ReportsIcon, to: "/home/reports" },
     { name: "Profile", icon: FaUserCircle, to: "/home/profile" },
+    {
+      name: "Notifications",
+      icon: NotificationsIcon,
+      to: "/home/notifications",
+    },
   ];
 
   // Filter nav items based on user role

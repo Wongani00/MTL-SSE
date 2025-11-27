@@ -53,7 +53,9 @@ const Login = () => {
         <div className="w-full">
           <div className="flex flex-col items-center justify-center">
             <img src={CompanyLogo} alt="MTL Logo" />
-            <h1 className="text-2xl font-md text-gray-900 mt-4">Sign in</h1>
+            <h1 className="text-2xl font-md text-gray-900 mt-4">
+              welcome back
+            </h1>
           </div>
           <div className="mt-8">
             <form onSubmit={handleSubmit}>
