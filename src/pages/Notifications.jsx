@@ -344,7 +344,7 @@ const NotificationsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Read</p>
@@ -417,7 +417,7 @@ const NotificationsPage = () => {
         {/* Notifications List */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {filteredNotifications.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-6">
               <FaBell className="text-4xl text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No notifications found
@@ -433,7 +433,7 @@ const NotificationsPage = () => {
               {filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-l-4 ${
+                  className={`p-2 border-l-4 ${
                     notification.is_urgent && !notification.is_read
                       ? "border-l-red-500"
                       : !notification.is_read
@@ -523,7 +523,7 @@ const NotificationsPage = () => {
 
         {/* Empty state for no notifications at all */}
         {notifications.length === 0 && !loading && (
-          <div className="text-center py-12">
+          <div className="text-center py-6">
             <FaBell className="text-6xl text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">
               No notifications yet
