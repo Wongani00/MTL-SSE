@@ -16,12 +16,59 @@ const SignUp = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
+  // Define department-role relationships
+  const departmentRoles = {
+    Commercial: ["Sales Executive"],
+    Finance: ["Accountant"],
+    Technical: [
+      "Wireless Engineer",
+      "IP Broadband Engineer",
+      "Solutions Engineer",
+      "Transmission Engineer"
+    ],
+  };
+
+  // Get roles for the selected department
+  const getRolesForDepartment = (department) => {
+    return departmentRoles[department] || [];
+  };
+
+  // Get department for the selected role
+  const getDepartmentForRole = (role) => {
+    for (const [department, roles] of Object.entries(departmentRoles)) {
+      if (roles.includes(role)) {
+        return department;
+      }
+    }
+    return "";
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    setFormData((prev) => {
+      const updatedFormData = {
+        ...prev,
+        [name]: value,
+      };
+
+      // If department changes, reset role and update available roles
+      if (name === "department") {
+        updatedFormData.role = "";
+      }
+
+      // If role changes, update department to match the role's department
+      if (name === "role") {
+        const roleDepartment = getDepartmentForRole(value);
+        if (roleDepartment) {
+          updatedFormData.department = roleDepartment;
+        }
+      }
+
+      return updatedFormData;
+    });
+
+    // Clear errors for the changed field
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -96,7 +143,7 @@ const SignUp = () => {
 
         setTimeout(() => {
           navigate("/login");
-        }, 2000);
+        }, 3000);
       } else {
         if (result.data && typeof result.data === "object") {
           setErrors(result.data);
@@ -149,6 +196,8 @@ const SignUp = () => {
       </div>
     );
   }
+
+  const availableRoles = getRolesForDepartment(formData.department);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -260,7 +309,9 @@ const SignUp = () => {
                   disabled={loading}
                   required
                 >
-                  <option value="" disabled hidden></option>
+                  <option value="" disabled hidden>
+                    Select Department
+                  </option>
                   <option value="Commercial">Commercial</option>
                   <option value="Finance">Finance</option>
                   <option value="Technical">Technical</option>
@@ -294,14 +345,16 @@ const SignUp = () => {
                   disabled={loading}
                   required
                 >
-                  <option value="" disabled hidden></option>
-                  <option value="Wireless Engineer">Wireless Engineer</option>
-                  <option value="IP Broadband Engineer">
-                    IP Broadband Engineer
+                  <option value="" disabled hidden>
+                    {formData.department
+                      ? `Select ${formData.department} Role`
+                      : "Select Department First"}
                   </option>
-                  <option value="Sales Executive">Sales Executive</option>
-                  <option value="Accountant">Accountant</option>
-                  <option value="Solutions">SSE</option>
+                  {availableRoles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
                 </select>
                 <label
                   htmlFor="role"
