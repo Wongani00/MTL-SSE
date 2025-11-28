@@ -194,7 +194,7 @@ const SpecificProject = () => {
         }
       }
     } catch (error) {
-      console.error("Failed to refresh project:", error);
+      alert.error("Failed to refresh project:", error);
     }
   };
 
@@ -232,11 +232,9 @@ const SpecificProject = () => {
       });
 
       const result = await response.json();
-      console.log("Debug test result:", result);
 
       return result;
     } catch (error) {
-      console.error("Debug test failed:", error);
       return { success: false, message: error.message };
     }
   };
@@ -252,8 +250,6 @@ const SpecificProject = () => {
         alert(`Invalid stage: ${stageValue}`);
         return;
       }
-
-      console.log(`Advancing to stage: ${stageValue} (${stageKey})`);
 
       const requestBody = {
         new_stage: stageKey,
@@ -272,7 +268,6 @@ const SpecificProject = () => {
       });
 
       const result = await response.json();
-      console.log("Stage advancement response:", result);
 
       if (response.ok && result.success) {
         await fetchProjectData();
@@ -290,7 +285,6 @@ const SpecificProject = () => {
         }
       }
     } catch (error) {
-      console.error("Failed to advance stage:", error);
       alert("Failed to advance stage: " + error.message);
     } finally {
       setAdvancingStage(false);
@@ -443,7 +437,7 @@ const SpecificProject = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => navigate("/home/projects")}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
           >
             Back to Projects
           </button>
@@ -464,7 +458,7 @@ const SpecificProject = () => {
           </p>
           <button
             onClick={() => navigate("/home/projects")}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-3 py-1 cursor-pointer rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Projects
           </button>
@@ -488,12 +482,12 @@ const SpecificProject = () => {
 
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-2">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between py-1">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate("/home/projects")}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center text-gray-600 cursor-pointer hover:text-gray-900 transition-colors"
               >
                 <FaArrowLeft className="mr-2" />
                 <span className="hidden md:block">Back to Projects</span>
@@ -523,7 +517,7 @@ const SpecificProject = () => {
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center bg-blue-600 text-white px-2 py-2 md:px-4 md:py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center bg-blue-600 text-white px-2 py-2 cursor-pointer md:px-4 md:py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <FaEdit className="mr-2" />
                   <span className="">Edit</span>
@@ -533,14 +527,14 @@ const SpecificProject = () => {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                    className="flex items-center bg-green-600 text-white px-2 py-1 rounded-lg cursor-pointer hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
                     <FaSave className="mr-2" />
                     {saving ? "Saving..." : <p>save</p>}
                   </button>
                   <button
                     onClick={handleCancel}
-                    className="flex items-center bg-gray-600 text-white px-2 py-1 rounded-lg hover:bg-gray-700 transition-colors"
+                    className="flex items-center bg-gray-600 text-white px-2 py-1 cursor-pointer rounded-lg hover:bg-gray-700 transition-colors"
                   >
                     <FaTimes className="mr-2" />
                     Cancel
@@ -916,7 +910,7 @@ const SpecificProject = () => {
                         key={stage}
                         onClick={() => advanceStage(stage)}
                         disabled={advancingStage}
-                        className="bg-blue-600 text-white py-3 px-4 rounded text-sm hover:bg-blue-700 transition-colors font-medium text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-blue-600 text-white py-3 px-4 rounded text-sm cursor-pointer hover:bg-blue-700 transition-colors font-medium text-center disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {advancingStage
                           ? "Advancing..."
@@ -932,7 +926,7 @@ const SpecificProject = () => {
                 </div>
 
                 {/* All Stages Dropdown */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                {/* <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-medium text-gray-700">
                       All Stages
@@ -971,9 +965,9 @@ const SpecificProject = () => {
                       ))}
                     </div>
                   )}
-                </div>
+                </div> */}
 
-                {debugMode && (
+                {/* {debugMode && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <button
                       onClick={() =>
@@ -984,7 +978,7 @@ const SpecificProject = () => {
                       Test Stage Advancement
                     </button>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
 

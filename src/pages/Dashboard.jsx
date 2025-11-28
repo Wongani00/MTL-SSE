@@ -15,6 +15,7 @@ import {
   FaChartBar,
   FaChartPie,
 } from "react-icons/fa";
+import { LiaMoneyCheckSolid } from "react-icons/lia";
 
 const Dashboard = () => {
   const [overview, setOverview] = useState(null);
@@ -64,12 +65,10 @@ const Dashboard = () => {
             if (commercialData.success) setCommercial(commercialData.data);
           }
         } catch (error) {
-          console.log(
-            "Additional reports not accessible for current user role"
-          );
+          alert.log("Additional reports not accessible for current user role");
         }
       } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+        alert.error("Failed to fetch dashboard data:", error);
       } finally {
         setLoading(false);
       }
@@ -102,8 +101,8 @@ const Dashboard = () => {
 
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="flex justify-between items-center py-1">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-600">
@@ -180,9 +179,9 @@ const OverviewTab = ({ overview }) => {
   const { summary, stage_distribution, recent_activity } = overview;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <SummaryCard
           icon={<FaProjectDiagram className="text-blue-600" />}
           title="Total Projects"
@@ -215,10 +214,10 @@ const OverviewTab = ({ overview }) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Stage Distribution */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 py-2 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <FaChartPie className="mr-2" />
               Project Stage Distribution
@@ -231,8 +230,8 @@ const OverviewTab = ({ overview }) => {
                   <span className="text-sm font-medium text-gray-700 capitalize">
                     {stage.replace(/_/g, " ")}
                   </span>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-26 bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-blue-600 h-2 rounded-full"
                         style={{
@@ -481,9 +480,9 @@ const CommercialTab = ({ commercial }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
           title="Total Pipeline Value"
-          value={`$${(revenue_pipeline.total_value / 1000).toFixed(1)}K`}
+          value={`K ${(revenue_pipeline.total_value / 1000).toFixed(1)}`}
           subtitle="Across all stages"
-          icon={<FaDollarSign className="text-green-600" />}
+          icon={<LiaMoneyCheckSolid className="text-green-600" />}
           color="green"
         />
         <MetricCard
@@ -554,7 +553,7 @@ const SummaryCard = ({ icon, title, value, color }) => {
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-sm border-2 p-6 ${colorClasses[color]}`}
+      className={`bg-white rounded-lg shadow-sm border-2 p-2 ${colorClasses[color]}`}
     >
       <div className="flex items-center">
         <div className="flex-shrink-0">{icon}</div>

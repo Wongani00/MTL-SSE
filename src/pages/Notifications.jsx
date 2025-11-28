@@ -43,7 +43,7 @@ const NotificationsPage = () => {
         setError("Failed to load notifications - Server error");
       }
     } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+      // console.error("Failed to fetch notifications:", error);
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -87,7 +87,7 @@ const NotificationsPage = () => {
         );
       }
     } catch (error) {
-      console.error("Failed to mark notifications as read:", error);
+      // console.error("Failed to mark notifications as read:", error);
       alert("Failed to mark notifications as read: " + error.message);
     } finally {
       setMarkingAsRead(false);
@@ -244,8 +244,8 @@ const NotificationsPage = () => {
 
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between py-1">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <FaBell className="text-2xl text-blue-600 mr-3" />
@@ -264,7 +264,7 @@ const NotificationsPage = () => {
               <button
                 onClick={refreshNotifications}
                 disabled={refreshing}
-                className="flex items-center bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="flex items-center bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
                 <FaSync
                   className={`mr-2 ${refreshing ? "animate-spin" : ""}`}
@@ -298,7 +298,7 @@ const NotificationsPage = () => {
             <p className="mt-1 text-sm text-red-700">{error}</p>
             <button
               onClick={fetchNotifications}
-              className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+              className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-red-700 transition-colors"
             >
               Retry
             </button>

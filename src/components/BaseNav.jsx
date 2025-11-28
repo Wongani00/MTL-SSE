@@ -216,7 +216,7 @@ const BaseNav = () => {
 
                   {hasAnyRole(["Admin", "SuperAdmin"]) && (
                     <NavLink
-                      to="/home/admin"
+                      to="/home/system-management"
                       onClick={() => {
                         setProfileSignoutPopper(false);
                         setSidebarOpen(false);
