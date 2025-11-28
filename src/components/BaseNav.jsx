@@ -7,7 +7,7 @@ import {
   FiShield as AdminIcon,
   FiBarChart2 as ReportsIcon,
 } from "react-icons/fi";
-import { FaArrowUp as NotificationsIcon } from "react-icons/fa";
+import { FaBell as NotificationsIcon } from "react-icons/fa";
 import { CiHome as HomeIcon } from "react-icons/ci";
 import { FaUserCircle } from "react-icons/fa";
 import ImgLog from "../assets/mtl-logo-75.png";
