@@ -103,7 +103,7 @@ const Dashboard = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex justify-between items-center py-1">
-            <div>
+            <div className="hidden md:inline-flex">
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-600">
                 Project overview and performance metrics

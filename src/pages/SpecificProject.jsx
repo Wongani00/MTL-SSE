@@ -20,6 +20,12 @@ import {
   FaArrowRight,
   FaRocket,
   FaBug,
+  FaServer,
+  FaNetworkWired,
+  FaGlobe,
+  FaMailBulk,
+  FaHdd,
+  FaBox,
 } from "react-icons/fa";
 
 const SpecificProject = () => {
@@ -36,6 +42,8 @@ const SpecificProject = () => {
   const [showAllStages, setShowAllStages] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [advancingStage, setAdvancingStage] = useState(false);
+  const [surveyExists, setSurveyExists] = useState(false);
+  const [survey, setSurvey] = useState(null);
   const [debugMode, setDebugMode] = useState(false);
 
   // Define the actual ProjectStatus enum values from your models.py
@@ -72,6 +80,28 @@ const SpecificProject = () => {
             setBoqItems(result.data.boq_items || []);
             setDocuments(result.data.documents || []);
             console.log("Project data loaded:", result.data);
+
+            // fetching survey data
+            try {
+              const surveyResponse = await fetch(`/api/projects/${id}/survey`, {
+                credentials: "include",
+              });
+
+              if (surveyResponse.ok) {
+                const surveyResult = await surveyResponse.json();
+                if (surveyResult.success) {
+                  setSurvey(surveyResult.data);
+                  setSurveyExists(true);
+                } else {
+                  setSurveyExists(false);
+                }
+              } else {
+                setSurveyExists(false);
+              }
+            } catch (surveyError) {
+              console.error("Failed to fetch survey:", surveyError);
+              setSurveyExists(false);
+            }
           } else {
             setError(result.message || "Failed to load project");
           }
@@ -135,13 +165,32 @@ const SpecificProject = () => {
       setSaving(true);
 
       const updateData = {
+        // Customer Information
         customer_name: editForm.customer_name || "",
         customer_organization: editForm.customer_organization || "",
-        customer_email: editForm.customer_email || "",
-        customer_phone: editForm.customer_phone || "",
+        project_information: editForm.project_information || "",
+
+        // Service Requested
         service_type: editForm.service_type || "",
-        support_model: editForm.support_model || "",
+        vpn_aggregated_sites: editForm.vpn_aggregated_sites || "",
         number_of_users: editForm.number_of_users || null,
+
+        // IT Personnel
+        support_model: editForm.support_model || "",
+
+        // Infrastructure
+        router_firewall_present: editForm.router_firewall_present || "",
+        domain_hosted_at: editForm.domain_hosted_at || "",
+        mail_server_at_client_site: editForm.mail_server_at_client_site || "",
+        mail_server_version: editForm.mail_server_version || "",
+        email_system_managed_by: editForm.email_system_managed_by || "",
+        dns_server_present: editForm.dns_server_present || "",
+        dns_managed_by: editForm.dns_managed_by || "",
+        lan_present: editForm.lan_present || "",
+        equipment_cabinet_present: editForm.equipment_cabinet_present || "",
+        space_available_in_cabinet: editForm.space_available_in_cabinet || "",
+
+        // Service Classification
         managed_service: editForm.managed_service || "",
       };
 
@@ -415,6 +464,21 @@ const SpecificProject = () => {
     return getStageDisplayName(project?.current_stage) === stageValue;
   };
 
+  // Helper function to render Yes/No fields
+  const renderYesNoField = (value) => {
+    return value === "Yes" ? (
+      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        Yes
+      </span>
+    ) : value === "No" ? (
+      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        No
+      </span>
+    ) : (
+      <span className="text-gray-500">Not specified</span>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -502,18 +566,6 @@ const SpecificProject = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              {/* <button
-                onClick={() => setDebugMode(!debugMode)}
-                className={`flex items-center px-3 py-2 rounded-lg text-sm ${
-                  debugMode
-                    ? "bg-yellow-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                <FaBug className="mr-2" />
-                {debugMode ? "Debug ON" : "Debug OFF"}
-              </button> */}
-
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
@@ -548,20 +600,6 @@ const SpecificProject = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {debugMode && (
-          <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
-            <div className="flex items-center">
-              <FaBug className="text-yellow-600 mr-2" />
-              <span className="font-semibold">Debug Mode Enabled</span>
-            </div>
-            <div className="mt-2 text-sm">
-              <p>Project ID: {id}</p>
-              <p>Current Stage: {getStageDisplayName(project.current_stage)}</p>
-              <p>Next Stages: {nextStages.join(", ")}</p>
-            </div>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Project Details */}
           <div className="lg:col-span-2 space-y-6">
@@ -574,7 +612,7 @@ const SpecificProject = () => {
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
+                  {/* <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       Customer Name
                     </label>
@@ -589,7 +627,7 @@ const SpecificProject = () => {
                     ) : (
                       <p className="text-gray-900">{project.customer_name}</p>
                     )}
-                  </div>
+                  </div> */}
 
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
@@ -610,40 +648,23 @@ const SpecificProject = () => {
                     )}
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="col-span-2 space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
-                      Email
+                      Project Information
                     </label>
                     {isEditing ? (
-                      <input
-                        type="email"
-                        name="customer_email"
-                        value={editForm.customer_email || ""}
+                      <textarea
+                        name="project_information"
+                        value={editForm.project_information || ""}
                         onChange={handleInputChange}
+                        rows={3}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Additional project details and information..."
                       />
                     ) : (
                       <p className="text-gray-900">
-                        {project.customer_email || "Not specified"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Phone
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="customer_phone"
-                        value={editForm.customer_phone || ""}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900">
-                        {project.customer_phone || "Not specified"}
+                        {project.project_information ||
+                          "No additional information provided"}
                       </p>
                     )}
                   </div>
@@ -651,11 +672,11 @@ const SpecificProject = () => {
               </div>
             </div>
 
-            {/* Service Details Card */}
+            {/* Service Requested Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Service Details
+                  Service Requested
                 </h2>
               </div>
               <div className="p-6">
@@ -684,22 +705,20 @@ const SpecificProject = () => {
 
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
-                      Support Model
+                      VPN Aggregated Sites/Capacity
                     </label>
                     {isEditing ? (
-                      <select
-                        name="support_model"
-                        value={editForm.support_model || ""}
+                      <input
+                        type="text"
+                        name="vpn_aggregated_sites"
+                        value={editForm.vpn_aggregated_sites || ""}
                         onChange={handleInputChange}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">Select Support Model</option>
-                        <option value="Internal">Internal</option>
-                        <option value="Outsourced">Outsourced</option>
-                      </select>
+                        placeholder="e.g., 5 sites, 100Mbps capacity"
+                      />
                     ) : (
                       <p className="text-gray-900">
-                        {project.support_model || "Not specified"}
+                        {project.vpn_aggregated_sites || "Not specified"}
                       </p>
                     )}
                   </div>
@@ -723,7 +742,283 @@ const SpecificProject = () => {
                       </p>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
 
+            {/* IT Personnel Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <FaUsers className="mr-2" />
+                  IT Personnel
+                </h2>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Support Model
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="support_model"
+                        value={editForm.support_model || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select Support Model</option>
+                        <option value="Internal">Internal</option>
+                        <option value="Outsourced">Outsourced</option>
+                      </select>
+                    ) : (
+                      <p className="text-gray-900">
+                        {project.support_model || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Infrastructure Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <FaServer className="mr-2" />
+                  Infrastructure
+                </h2>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Row 1 */}
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center">
+                      <FaNetworkWired className="mr-2 text-gray-400" />
+                      Router/Firewall Present
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="router_firewall_present"
+                        value={editForm.router_firewall_present || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : (
+                      renderYesNoField(project.router_firewall_present)
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center">
+                      <FaGlobe className="mr-2 text-gray-400" />
+                      Domain Hosted At
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="domain_hosted_at"
+                        value={editForm.domain_hosted_at || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="e.g., GoDaddy, Namecheap, etc."
+                      />
+                    ) : (
+                      <p className="text-gray-900">
+                        {project.domain_hosted_at || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Row 2 */}
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center">
+                      <FaMailBulk className="mr-2 text-gray-400" />
+                      Mail Server at Client Site
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="mail_server_at_client_site"
+                        value={editForm.mail_server_at_client_site || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : (
+                      renderYesNoField(project.mail_server_at_client_site)
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center">
+                      <FaHdd className="mr-2 text-gray-400" />
+                      Mail Server Version
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="mail_server_version"
+                        value={editForm.mail_server_version || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="e.g., Exchange 2019, Postfix 3.x"
+                      />
+                    ) : (
+                      <p className="text-gray-900">
+                        {project.mail_server_version || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Row 3 */}
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Email System Managed By
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="email_system_managed_by"
+                        value={editForm.email_system_managed_by || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Internal IT">Internal IT</option>
+                        <option value="ISP">ISP</option>
+                        <option value="Third Party">Third Party</option>
+                      </select>
+                    ) : (
+                      <p className="text-gray-900">
+                        {project.email_system_managed_by || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      DNS Server Present
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="dns_server_present"
+                        value={editForm.dns_server_present || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : (
+                      renderYesNoField(project.dns_server_present)
+                    )}
+                  </div>
+
+                  {/* Row 4 */}
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      DNS Managed By
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="dns_managed_by"
+                        value={editForm.dns_managed_by || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Internal IT">Internal IT</option>
+                        <option value="ISP">ISP</option>
+                        <option value="Third Party">Third Party</option>
+                      </select>
+                    ) : (
+                      <p className="text-gray-900">
+                        {project.dns_managed_by || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      LAN Present
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="lan_present"
+                        value={editForm.lan_present || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : (
+                      renderYesNoField(project.lan_present)
+                    )}
+                  </div>
+
+                  {/* Row 5 */}
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center">
+                      <FaBox className="mr-2 text-gray-400" />
+                      Equipment Cabinet Present
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="equipment_cabinet_present"
+                        value={editForm.equipment_cabinet_present || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : (
+                      renderYesNoField(project.equipment_cabinet_present)
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Space Available in Cabinet
+                    </label>
+                    {isEditing ? (
+                      <select
+                        name="space_available_in_cabinet"
+                        value={editForm.space_available_in_cabinet || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    ) : (
+                      renderYesNoField(project.space_available_in_cabinet)
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Service Classification Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Service Classification
+                </h2>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       Managed Service
@@ -924,65 +1219,9 @@ const SpecificProject = () => {
                     )}
                   </div>
                 </div>
-
-                {/* All Stages Dropdown */}
-                {/* <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-700">
-                      All Stages
-                    </h3>
-                    <button
-                      onClick={() => setShowAllStages(!showAllStages)}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      {showAllStages ? "▲ Hide" : "▼ Show All"}
-                    </button>
-                  </div>
-
-                  {showAllStages && (
-                    <div className="grid grid-cols-1 gap-2">
-                      {allStages.map((stage) => (
-                        <button
-                          key={stage}
-                          onClick={() => advanceStage(stage)}
-                          disabled={
-                            advancingStage ||
-                            isStageCompleted(stage) ||
-                            isCurrentStage(stage)
-                          }
-                          className="bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-200 transition-colors border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-left"
-                        >
-                          <div className="flex justify-between items-center">
-                            <span>{stage}</span>
-                            {isStageCompleted(stage) && (
-                              <FaCheckCircle className="text-green-500 text-xs" />
-                            )}
-                            {isCurrentStage(stage) && (
-                              <FaClock className="text-blue-500 text-xs" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div> */}
-
-                {/* {debugMode && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <button
-                      onClick={() =>
-                        testStageAdvancement(nextStages[0] || allStages[0])
-                      }
-                      className="w-full bg-yellow-500 text-white py-2 px-4 rounded text-sm hover:bg-yellow-600 transition-colors"
-                    >
-                      Test Stage Advancement
-                    </button>
-                  </div>
-                )} */}
               </div>
             </div>
 
-            {/* Rest of the sidebar components remain the same */}
             {/* Project Timeline Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -1124,6 +1363,46 @@ const SpecificProject = () => {
                 ) : (
                   <p className="text-gray-500 text-center py-4">
                     No documents uploaded
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Survey Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <FaFileAlt className="mr-2 text-green-600" />
+                  Survey Report
+                </h2>
+              </div>
+              <div className="p-6">
+                {project.current_stage === "Survey Scheduled" ||
+                project.current_stage === "Survey Complete" ? (
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => navigate(`/home/projects/${id}/survey`)}
+                      className="w-full bg-green-600 text-white py-3 px-4 rounded text-sm hover:bg-green-700 transition-colors font-medium text-center"
+                    >
+                      {surveyExists
+                        ? "View Survey Report"
+                        : "Create Survey Report"}
+                    </button>
+
+                    {surveyExists && (
+                      <div className="text-sm text-gray-600">
+                        <p>
+                          <strong>Status:</strong> {survey.status}
+                        </p>
+                        <p>
+                          <strong>Last Updated:</strong> {survey.updated_at}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-2">
+                    Survey available when project reaches Survey stage
                   </p>
                 )}
               </div>

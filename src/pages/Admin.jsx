@@ -184,6 +184,7 @@ const Admin = () => {
     (user) =>
       user.role === "Wireless Engineer" ||
       user.role === "IP Broadband Engineer" ||
+      user.role === "Solutions Engineer" ||
       user.role === "Solutions"
   ).length;
   const financeTeam = userDetails.filter(

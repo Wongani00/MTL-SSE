@@ -153,7 +153,7 @@ const BaseNav = () => {
           <input
             type="text"
             placeholder="Search..."
-            className="hidden md:flex flex-1 max-w-2xl bg-gray-100 rounded-lg px-4 py-2 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="hidden md:flex flex-1 shadow-md max-w-2xl bg-gray-100 rounded-lg px-4 py-2 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <div>

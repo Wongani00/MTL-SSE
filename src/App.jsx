@@ -20,6 +20,7 @@ import SignUp from "./pages/SignUp.jsx";
 import AllProjectsSpecificProjectLayout from "./Layouts/AllProjectsSpecificProjectLayout.jsx";
 import SpecificProject from "./pages/SpecificProject.jsx";
 import Notifications from "./pages/Notifications.jsx";
+import SurveyPage from "./pages/SurveyPage.jsx";
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
@@ -42,6 +43,8 @@ const App = () => {
           >
             <Route index element={<Projects />} />
             <Route path=":id" element={<SpecificProject />} />
+
+            <Route path=":id/survey" element={<SurveyPage />} />
           </Route>
           <Route
             path="home/system-management"
