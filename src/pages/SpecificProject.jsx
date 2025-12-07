@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, NavLink } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import {
   FaArrowLeft,
@@ -26,6 +26,7 @@ import {
   FaMailBulk,
   FaHdd,
   FaBox,
+  FaLayerGroup,
 } from "react-icons/fa";
 
 const SpecificProject = () => {
@@ -79,7 +80,6 @@ const SpecificProject = () => {
             setEditForm(result.data);
             setBoqItems(result.data.boq_items || []);
             setDocuments(result.data.documents || []);
-            console.log("Project data loaded:", result.data);
 
             // fetching survey data
             try {
@@ -150,6 +150,8 @@ const SpecificProject = () => {
     }
   }, [id, project?.current_stage]);
 
+  console.log("tasks : ", tasks);
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
@@ -213,7 +215,6 @@ const SpecificProject = () => {
         throw new Error(result.message || "Failed to update project");
       }
     } catch (error) {
-      console.error("Failed to update project:", error);
       alert("Failed to update project: " + error.message);
     } finally {
       setSaving(false);
@@ -269,8 +270,6 @@ const SpecificProject = () => {
         new_stage: stageKey,
       };
 
-      console.log("Testing stage advancement with:", requestBody);
-
       const response = await fetch("/api/projects/debug/advance-stage", {
         method: "POST",
         headers: {
@@ -304,8 +303,6 @@ const SpecificProject = () => {
         new_stage: stageKey,
         remarks: `Stage advanced to ${stageValue} via web interface`,
       };
-
-      console.log("Sending request:", requestBody);
 
       const response = await fetch(`/api/projects/${id}/stage`, {
         method: "POST",
@@ -479,13 +476,21 @@ const SpecificProject = () => {
     );
   };
 
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Loading project details...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading project details...</p>
-        </div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -1194,6 +1199,18 @@ const SpecificProject = () => {
                   </div>
                 </div>
 
+                {/* BOQ Management Button */}
+                <div className="mb-4">
+                  <NavLink to={`/home/projects/${id}/boq`}>
+                    <button
+                      // onClick={() => navigate(`/projects/${id}/boq`)}
+                      className="w-full bg-purple-600 text-white py-3 px-4 rounded text-sm cursor-pointer hover:bg-purple-700 transition-colors font-medium text-center flex items-center justify-center gap-2"
+                    >
+                      <FaLayerGroup /> Manage BOQ
+                    </button>
+                  </NavLink>
+                </div>
+
                 {/* Quick Actions - Primary Buttons */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium text-gray-700">
@@ -1221,7 +1238,6 @@ const SpecificProject = () => {
                 </div>
               </div>
             </div>
-
             {/* Project Timeline Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -1282,7 +1298,6 @@ const SpecificProject = () => {
                 </div>
               </div>
             </div>
-
             {/* Project Metadata Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -1329,7 +1344,6 @@ const SpecificProject = () => {
                 </div>
               </div>
             </div>
-
             {/* Documents Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -1367,7 +1381,6 @@ const SpecificProject = () => {
                 )}
               </div>
             </div>
-
             {/* Survey Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -1382,7 +1395,7 @@ const SpecificProject = () => {
                   <div className="space-y-3">
                     <button
                       onClick={() => navigate(`/home/projects/${id}/survey`)}
-                      className="w-full bg-green-600 text-white py-3 px-4 rounded text-sm hover:bg-green-700 transition-colors font-medium text-center"
+                      className="w-full bg-green-600 text-white py-3 px-4 rounded text-sm cursor-pointer hover:bg-green-700 transition-colors font-medium text-center"
                     >
                       {surveyExists
                         ? "View Survey Report"

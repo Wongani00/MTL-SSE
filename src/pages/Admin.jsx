@@ -377,10 +377,14 @@ const Admin = () => {
 
                   <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 cursor-pointer hover:text-blue-900 transition-colors">
+                      <button
+                        title="Edit User"
+                        className="text-blue-600 cursor-pointer hover:text-blue-900 transition-colors"
+                      >
                         Edit
                       </button>
                       <button
+                        title="Delete User"
                         onClick={() => openDeleteModal(user)}
                         className="text-red-600 cursor-pointer hover:text-red-900 transition-colors"
                       >
@@ -394,7 +398,7 @@ const Admin = () => {
           </table>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        {/* <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700">
               Showing <span className="font-medium">1</span> to{" "}
@@ -410,7 +414,7 @@ const Admin = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* =============================== MODALS =========================== */}
@@ -607,15 +611,20 @@ const Admin = () => {
                       onChange={handleInputChange}
                     >
                       <option value="" disabled hidden></option>
-                      <option value="Wireless Engineer">
-                        Wireless Engineer
-                      </option>
+                      <option value="Sales Executive">Sales Executive</option>
+                      <option value="Accountant">Accountant</option>
                       <option value="IP Broadband Engineer">
                         IP Broadband Engineer
                       </option>
-                      <option value="Sales Executive">Sales Executive</option>
-                      <option value="Accountant">Accountant</option>
-                      <option value="Solutions">SSE</option>
+                      <option value="Solutions Engineer">
+                        Solutions Engineer
+                      </option>
+                      <option value="Wireless Engineer">
+                        Wireless Engineer
+                      </option>
+                      <option value="Transmission Engineer">
+                        Transmission Engineer
+                      </option>
                       <option value="Admin">Admin</option>
                     </select>
                     <label

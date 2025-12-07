@@ -480,7 +480,7 @@ const CommercialTab = ({ commercial }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
           title="Total Pipeline Value"
-          value={`K ${(revenue_pipeline.total_value / 1000).toFixed(1)}`}
+          value={`MWK ${revenue_pipeline.total_value}`}
           subtitle="Across all stages"
           icon={<LiaMoneyCheckSolid className="text-green-600" />}
           color="green"
@@ -528,7 +528,7 @@ const CommercialTab = ({ commercial }) => {
                       ></div>
                     </div>
                     <span className="text-sm font-semibold text-gray-900 w-20 text-right">
-                      ${(revenue / 1000).toFixed(1)}K
+                      MWK {(revenue )}
                     </span>
                   </div>
                 </div>

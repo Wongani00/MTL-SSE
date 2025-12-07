@@ -21,6 +21,7 @@ import AllProjectsSpecificProjectLayout from "./Layouts/AllProjectsSpecificProje
 import SpecificProject from "./pages/SpecificProject.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import SurveyPage from "./pages/SurveyPage.jsx";
+import BOQProfessionalPage from "./pages/BOQProfessionalPage.jsx";
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
@@ -45,6 +46,7 @@ const App = () => {
             <Route path=":id" element={<SpecificProject />} />
 
             <Route path=":id/survey" element={<SurveyPage />} />
+            <Route path=":id/boq" element={<BOQProfessionalPage />} />
           </Route>
           <Route
             path="home/system-management"
