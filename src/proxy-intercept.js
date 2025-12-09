@@ -1,40 +1,14 @@
-// Store the original fetch
+const API_BASE = import.meta.env.VITE_API_URL;
+
+// original fetch
 const originalFetch = window.fetch;
 
 // Override fetch globally
-window.fetch = async function(resource, options = {}) {
-  let url = resource;
-  
-  // Only modify relative URLs (starting with /api or /auth)
-  if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('/auth'))) {
-    if (import.meta.env.PROD) {
-      // In production: prepend backend URL
-      url = `https://mtlsse-api.onrender.com${resource}`;
-    }
-    // In development: keep as is (Vite proxy will handle it)
+window.fetch = function (url, options = {}) {
+  // If URL starts with "/api" or "/auth", replace it with full backend URL
+  if (typeof url === "string" && (url.startsWith("/api") || url.startsWith("/auth"))) {
+    url = API_BASE + url;
   }
-  
-  // Add credentials for all requests
-  const modifiedOptions = {
-    ...options,
-    credentials: 'include', // Important for Flask sessions
-  };
-  
-  return originalFetch(url, modifiedOptions);
-};
 
-// Also override for Request objects
-const originalRequest = Request;
-window.Request = class CustomRequest extends originalRequest {
-  constructor(input, init) {
-    let modifiedInput = input;
-    
-    if (typeof input === 'string' && (input.startsWith('/api') || input.startsWith('/auth'))) {
-      if (import.meta.env.PROD) {
-        modifiedInput = `https://mtlsse-api.onrender.com${input}`;
-      }
-    }
-    
-    super(modifiedInput, { ...init, credentials: 'include' });
-  }
+  return originalFetch(url, options);
 };
