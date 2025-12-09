@@ -7,7 +7,7 @@ const Home = () => {
   return (
     <div>
       <Helmet>
-        <title>MTL SSE</title>
+        <title>MTL SSE - Home</title>
         <meta
           name="description"
           content="Welcome to the Home Page of our application."
@@ -137,7 +137,7 @@ const Home = () => {
         </div>
 
         {/* Stats Bar */}
-        <div className="bg-white border-b border-gray-200">
+        {/* <div className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-8">
               <div className="text-center">
@@ -164,7 +164,7 @@ const Home = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Quick Access Section */}
         <div className="bg-gray-50 py-16">

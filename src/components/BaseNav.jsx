@@ -160,7 +160,10 @@ const BaseNav = () => {
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
                 <h3 className="font-semibold text-[18px] text-gray-900">
-                  Hello, {user?.username}!
+                  Hello
+                  <span className="md:hidden lg:inline-flex">
+                    , {user?.username}!
+                  </span>
                 </h3>
                 <p className="text-sm text-gray-500 capitalize">
                   {user?.role} Role

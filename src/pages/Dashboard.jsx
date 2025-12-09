@@ -92,7 +92,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Helmet>
-        <title>MTL SSE</title>
+        <title>MTL SSE - Dashboard</title>
         <meta
           name="description"
           content="Dashboard - Overview of projects and performance metrics"
@@ -103,18 +103,15 @@ const Dashboard = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex justify-between items-center py-1">
-            <div className="hidden md:inline-flex">
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">
-                Project overview and performance metrics
-              </p>
+            <div className="hidden sm:inline-flex">
+              <h1 className="font-bold text-gray-900">Dashboard</h1>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex space-x-4 md:space-x-1 bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setActiveTab("overview")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-2 py-2 rounded-md cursor-pointer text-sm font-medium transition-colors ${
                   activeTab === "overview"
                     ? "bg-white text-blue-600 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -124,7 +121,7 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={() => setActiveTab("pipeline")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-2 py-2 rounded-md cursor-pointer text-sm font-medium transition-colors ${
                   activeTab === "pipeline"
                     ? "bg-white text-blue-600 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -134,7 +131,7 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={() => setActiveTab("performance")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-2 py-2 rounded-md cursor-pointer text-sm font-medium transition-colors ${
                   activeTab === "performance"
                     ? "bg-white text-blue-600 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -144,7 +141,7 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={() => setActiveTab("commercial")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-2 py-2 rounded-md cursor-pointer text-sm font-medium transition-colors ${
                   activeTab === "commercial"
                     ? "bg-white text-blue-600 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -346,7 +343,7 @@ const PerformanceTab = ({ performance }) => {
   return (
     <div className="space-y-6">
       {/* SLA Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="SLA Compliance Rate"
           value={`${sla_metrics.compliance_rate}%`}
@@ -528,7 +525,7 @@ const CommercialTab = ({ commercial }) => {
                       ></div>
                     </div>
                     <span className="text-sm font-semibold text-gray-900 w-20 text-right">
-                      MWK {(revenue )}
+                      MWK {revenue}
                     </span>
                   </div>
                 </div>

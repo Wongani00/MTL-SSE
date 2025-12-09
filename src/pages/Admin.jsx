@@ -42,7 +42,7 @@ const Admin = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Raw response data:", data);
+          // console.log("Raw response data:", data);
           setUserDetails(data);
         } else {
           console.error(
@@ -197,7 +197,7 @@ const Admin = () => {
   return (
     <div>
       <Helmet>
-        <title>MTL SSE</title>
+        <title>MTL SSE - User management</title>
         <meta
           name="description"
           content="Admin Panel - Management of application settings and users."

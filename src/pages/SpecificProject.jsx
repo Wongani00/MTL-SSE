@@ -150,8 +150,6 @@ const SpecificProject = () => {
     }
   }, [id, project?.current_stage]);
 
-  console.log("tasks : ", tasks);
-
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
@@ -542,7 +540,7 @@ const SpecificProject = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Helmet>
-        <title>MTL SSE - {project.project_code}</title>
+        <title>MTL SSE - {project.project_code} Project</title>
         <meta
           name="description"
           content={`Details for project ${project.project_code}`}

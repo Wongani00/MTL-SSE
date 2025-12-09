@@ -201,7 +201,7 @@ const Projects = () => {
   return (
     <div>
       <Helmet>
-        <title>MTL SSE</title>
+        <title>MTL SSE - All Projects</title>
         <meta
           name="description"
           content="Projects - Overview of all projects and their statuses."
