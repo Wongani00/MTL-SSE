@@ -9,8 +9,8 @@ export default defineConfig({
   server: {
     // port: 3000,
     proxy: {
-      "/api": "http://localhost:5000",
-      "/auth": "http://localhost:5000",
+      "/api": "https://mtlsse-api.onrender.com",
+      "/auth": "https://mtlsse-api.onrender.com",
     },
   },
 });
