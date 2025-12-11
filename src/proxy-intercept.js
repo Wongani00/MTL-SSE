@@ -14,17 +14,14 @@
 // };
 
 
-// Hard-coded API base URL
 const API_BASE = "https://mtlsse-api.onrender.com".replace(/\/$/, "");
 
-// original fetch
 const originalFetch = window.fetch;
 
-// Override fetch globally
 window.fetch = function (url, options = {}) {
   if (typeof url === "string" && (url.startsWith("/api") || url.startsWith("/auth"))) {
-    url = API_BASE + url; // Safe concatenation
+    url = API_BASE + url; // ensures correct full URL
   }
-
   return originalFetch(url, options);
 };
+
